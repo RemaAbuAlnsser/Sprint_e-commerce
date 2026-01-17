@@ -1,0 +1,122 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  FileText,
+  Building2,
+  Package,
+  ShoppingCart,
+  Settings,
+  ChevronRight,
+  LogOut,
+  Store,
+} from 'lucide-react';
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activeMenu, setActiveMenu] = useState('dashboard');
+
+  const handleLogout = () => {
+    router.push('/login');
+  };
+
+  const menuItems = [
+    { id: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, path: '/admin' },
+    { id: 'categories', label: 'الفئات', icon: FileText, path: '/admin/categories' },
+    { id: 'companies', label: 'الشركات', icon: Building2, path: '/admin/companies' },
+    { id: 'products', label: 'المنتجات', icon: Package, path: '/admin/products' },
+    { id: 'orders', label: 'الطلبات', icon: ShoppingCart, path: '/admin/orders' },
+    { id: 'settings', label: 'الإعدادات', icon: Settings, path: '/admin/settings' },
+  ];
+
+  const handleMenuClick = (item: any) => {
+    setActiveMenu(item.id);
+    if (item.path) {
+      router.push(item.path);
+    }
+  };
+
+  return (
+    <div className="flex flex-row-reverse min-h-screen bg-gradient-to-br from-[#f5f5dc] via-white to-[#e8e8c8]">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-xl flex flex-col border-r border-[#e8e8c8] fixed right-0 top-0 h-screen">
+        {/* Logo/Header */}
+        <div className="p-6 border-b border-[#e8e8c8]">
+          <div className="flex items-center justify-between">
+            <button className="text-[#5E4A45] hover:text-[#2c2c2c] transition-colors">
+              <ChevronRight size={24} />
+            </button>
+            <div className="text-center flex-1">
+              <h1 className="text-2xl font-bold text-[#2c2c2c]">Sprint Store</h1>
+              <p className="text-sm text-[#5E4A45] mt-1">لوحة التحكم</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleMenuClick(item)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 ${
+                pathname === item.path
+                  ? 'bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8] text-[#2c2c2c] shadow-md'
+                  : 'text-[#5E4A45] hover:bg-[#f5f5dc]/50 hover:text-[#2c2c2c]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon
+                  size={20}
+                  className={pathname === item.path ? 'text-[#2c2c2c]' : 'text-[#5E4A45]'}
+                />
+                <span className="font-medium">{item.label}</span>
+              </div>
+              {pathname === item.path && (
+                <div className="w-2 h-2 bg-[#5E4A45] rounded-full"></div>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* User Profile Section */}
+        <div className="p-4 border-t border-[#e8e8c8]">
+          <button
+            onClick={() => router.push('/')}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-white bg-gradient-to-r from-[#2c2c2c] to-[#5E4A45] hover:from-[#5E4A45] hover:to-[#2c2c2c] transition-all duration-300 mb-3 shadow-md hover:shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <Store size={20} />
+              <span className="font-medium">عرض المتجر</span>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8] rounded-xl">
+            <div className="w-10 h-10 bg-[#5E4A45] rounded-full flex items-center justify-center text-white font-bold">
+              A
+            </div>
+            <div className="flex-1">
+              <p className="text-[#2c2c2c] font-medium text-sm">Admin</p>
+              <p className="text-[#5E4A45] text-xs">مدير</p>
+            </div>
+            <div className="w-8 h-8 bg-[#5E4A45] rounded-full flex items-center justify-center text-white font-bold text-sm">
+              1
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 mr-64">
+        {children}
+      </main>
+    </div>
+  );
+}
