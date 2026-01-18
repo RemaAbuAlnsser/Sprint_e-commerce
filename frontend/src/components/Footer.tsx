@@ -16,38 +16,44 @@ export default function Footer() {
   const socialIconsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (topSectionRef.current) {
-        const columns = topSectionRef.current.querySelectorAll('.footer-column');
-        gsap.from(columns, {
+    if (topSectionRef.current) {
+      const columns = topSectionRef.current.querySelectorAll('.footer-column');
+      gsap.fromTo(
+        columns,
+        { opacity: 0, y: 60, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
           scrollTrigger: {
             trigger: footerRef.current,
             start: 'top 85%',
             toggleActions: 'play none none none',
           },
-          opacity: 0,
-          y: 60,
-          scale: 0.95,
           duration: 1,
           stagger: {
             amount: 0.4,
             ease: 'power2.out',
           },
           ease: 'power4.out',
-        });
-      }
+        }
+      );
+    }
 
-      if (socialIconsRef.current) {
-        const icons = socialIconsRef.current.children;
-        gsap.from(icons, {
+    if (socialIconsRef.current) {
+      const icons = socialIconsRef.current.children;
+      gsap.fromTo(
+        icons,
+        { opacity: 0, scale: 0, rotation: -360 },
+        {
+          opacity: 1,
+          scale: 1,
+          rotation: 0,
           scrollTrigger: {
             trigger: footerRef.current,
             start: 'top 85%',
             toggleActions: 'play none none none',
           },
-          opacity: 0,
-          scale: 0,
-          rotation: -360,
           duration: 0.8,
           stagger: {
             amount: 0.3,
@@ -55,26 +61,28 @@ export default function Footer() {
           },
           ease: 'back.out(2.5)',
           delay: 0.6,
-        });
-      }
+        }
+      );
+    }
 
-      if (bottomSectionRef.current) {
-        gsap.from(bottomSectionRef.current, {
+    if (bottomSectionRef.current) {
+      gsap.fromTo(
+        bottomSectionRef.current,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
           scrollTrigger: {
             trigger: footerRef.current,
             start: 'top 85%',
             toggleActions: 'play none none none',
           },
-          opacity: 0,
-          y: 40,
           duration: 1,
           ease: 'power3.out',
           delay: 1,
-        });
-      }
-    }, footerRef);
-
-    return () => ctx.revert();
+        }
+      );
+    }
   }, []);
 
   const handleIconHover = (e: React.MouseEvent<HTMLElement>) => {

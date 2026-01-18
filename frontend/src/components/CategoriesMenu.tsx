@@ -48,22 +48,21 @@ export default function CategoriesMenu() {
 
   useEffect(() => {
     if (!loading && categories.length > 0 && containerRef.current) {
-      const ctx = gsap.context(() => {
-        gsap.from(containerRef.current!.children, {
-          opacity: 0,
-          y: 50,
-          scale: 0.95,
+      gsap.fromTo(
+        containerRef.current.children,
+        { opacity: 0, y: 50, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
           duration: 0.8,
           stagger: {
             amount: 0.4,
             ease: 'power2.out',
           },
           ease: 'power3.out',
-          clearProps: 'all',
-        });
-      }, containerRef);
-
-      return () => ctx.revert();
+        }
+      );
     }
   }, [loading, categories, currentIndex]);
 

@@ -20,16 +20,17 @@ interface Product {
   stock: number;
 }
 
-interface Category {
+interface Subcategory {
   id: number;
   name: string;
   description?: string;
+  category_id: number;
 }
 
-export default function CategoryPage() {
+export default function SubcategoryPage() {
   const params = useParams();
   const router = useRouter();
-  const [category, setCategory] = useState<Category | null>(null);
+  const [subcategory, setSubcategory] = useState<Subcategory | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
@@ -39,26 +40,29 @@ export default function CategoryPage() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const fetchCategoryAndProducts = async () => {
+    const fetchSubcategoryAndProducts = async () => {
       try {
-        const categoryId = params.id;
-        console.log('Fetching category:', categoryId);
+        const subcategoryId = params.id;
+        console.log('Fetching subcategory:', subcategoryId);
 
-        const [categoryRes, productsRes] = await Promise.all([
-          fetch(`http://localhost:3000/categories/${categoryId}`),
-          fetch(`http://localhost:3000/products/category/${categoryId}`)
+        const [subcategoryRes, productsRes] = await Promise.all([
+          fetch(`http://localhost:3000/subcategories/${subcategoryId}`),
+          fetch(`http://localhost:3000/products/subcategory/${subcategoryId}`)
         ]);
 
-        if (categoryRes.ok) {
-          const categoryData = await categoryRes.json();
-          console.log('Category data:', categoryData);
-          setCategory(categoryData);
+        if (subcategoryRes.ok) {
+          const subcategoryData = await subcategoryRes.json();
+          console.log('Subcategory data:', subcategoryData);
+          setSubcategory(subcategoryData);
         }
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           console.log('Products data:', productsData.length, 'products');
+          console.log('Products:', productsData);
           setProducts(productsData);
+        } else {
+          console.error('Failed to fetch products:', productsRes.status, productsRes.statusText);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -67,7 +71,7 @@ export default function CategoryPage() {
       }
     };
 
-    fetchCategoryAndProducts();
+    fetchSubcategoryAndProducts();
   }, [params.id]);
 
   const handleAddToCart = useCallback((product: Product, buttonRef: HTMLButtonElement) => {
@@ -151,7 +155,7 @@ export default function CategoryPage() {
   }, [addToCart]);
 
   useEffect(() => {
-    if (!loading && category && products.length > 0 && gridRef.current) {
+    if (!loading && subcategory && products.length > 0 && gridRef.current) {
       gsap.fromTo(
         titleRef.current,
         { opacity: 0, y: 30 },
@@ -171,7 +175,7 @@ export default function CategoryPage() {
         }
       );
     }
-  }, [loading, category, products]);
+  }, [loading, subcategory, products]);
 
   if (loading) {
     return (
@@ -184,12 +188,12 @@ export default function CategoryPage() {
     );
   }
 
-  if (!category) {
+  if (!subcategory) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-6 py-20">
-          <div className="text-center text-[#2c2c2c]">القسم غير موجود</div>
+          <div className="text-center text-[#2c2c2c]">القسم الفرعي غير موجود</div>
         </div>
       </div>
     );
@@ -218,13 +222,13 @@ export default function CategoryPage() {
                 ref={titleRef}
                 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c]"
               >
-                {category.name}
+                {subcategory.name}
               </h1>
               <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent flex-1 max-w-xs"></div>
             </div>
-            {category.description && (
+            {subcategory.description && (
               <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">
-                {category.description}
+                {subcategory.description}
               </p>
             )}
             <p className="text-sm text-gray-500 mt-2">

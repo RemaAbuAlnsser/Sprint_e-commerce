@@ -15,6 +15,11 @@ export class ProductsController {
     return this.productsService.findByCategory(+categoryId);
   }
 
+  @Get('subcategory/:subcategoryId')
+  async findBySubcategory(@Param('subcategoryId') subcategoryId: string) {
+    return this.productsService.findBySubcategory(+subcategoryId);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.productsService.findOne(+id);

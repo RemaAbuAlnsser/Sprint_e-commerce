@@ -41,14 +41,17 @@ export default function CategoriesGrid() {
 
   useEffect(() => {
     if (!loading && categories.length > 0 && scrollContainerRef.current) {
-      const children = scrollContainerRef.current.children;
-      gsap.from(children, {
-        opacity: 0,
-        scale: 0.8,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: 'back.out(1.7)',
-      });
+      gsap.fromTo(
+        scrollContainerRef.current.children,
+        { opacity: 0, scale: 0.8 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: 'back.out(1.7)',
+        }
+      );
     }
   }, [loading, categories]);
 

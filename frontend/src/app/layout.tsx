@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/contexts/CartContext";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -31,7 +32,9 @@ export default function RootLayout({
       <body
         className={`${cairo.variable} ${tajawal.variable} antialiased`}
       >
-        {children}
+        <CartProvider>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

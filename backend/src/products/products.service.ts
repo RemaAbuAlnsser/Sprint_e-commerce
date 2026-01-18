@@ -26,6 +26,18 @@ export class ProductsService {
     return this.databaseService.query(query, [categoryId]);
   }
 
+  async findBySubcategory(subcategoryId: number) {
+    const query = `
+      SELECT p.*, c.name as category_name, s.name as subcategory_name
+      FROM products p 
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN subcategories s ON p.subcategory_id = s.id
+      WHERE p.subcategory_id = ? AND p.status = 'published'
+      ORDER BY p.created_at DESC
+    `;
+    return this.databaseService.query(query, [subcategoryId]);
+  }
+
   async findOne(id: number) {
     const query = `
       SELECT p.*, c.name as category_name 
