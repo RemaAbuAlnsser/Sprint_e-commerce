@@ -2,10 +2,24 @@
 
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
-import CategoriesList from '@/components/CategoriesList';
+import CategorySection from '@/components/CategorySection';
+import CategoriesMenu from '@/components/CategoriesMenu';
+import Footer from '@/components/Footer';
 import Image from 'next/image';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  image_url?: string;
+}
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -16,6 +30,8 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [siteImage, setSiteImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   const slides = [
     {
@@ -38,10 +54,16 @@ export default function Home() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        console.log('Fetching settings from API...');
         const response = await fetch('http://localhost:3000/settings');
+        console.log('Settings response status:', response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log('Settings data received:', data);
           setSiteImage(data.site_image);
+          console.log('Site image set to:', data.site_image);
+        } else {
+          console.error('Failed to fetch settings:', response.status, response.statusText);
         }
       } catch (error) {
         console.error('Error fetching settings:', error);
@@ -50,7 +72,28 @@ export default function Home() {
       }
     };
 
+    const fetchCategories = async () => {
+      try {
+        console.log('Fetching categories from API...');
+        const response = await fetch('http://localhost:3000/categories');
+        console.log('Categories response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Categories data received:', data.length, 'categories');
+          console.log('Categories:', data);
+          setCategories(data);
+        } else {
+          console.error('Failed to fetch categories:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
     fetchSettings();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -60,35 +103,36 @@ export default function Home() {
       if (imageRef.current) {
         gsap.from(imageRef.current, {
           opacity: 0,
-          scale: 1.1,
-          duration: 1.2,
-          ease: 'power3.out',
+          scale: 1.15,
+          duration: 1.5,
+          ease: 'power4.out',
         });
       }
 
-      gsap.from(titleRef.current, {
-        opacity: 0,
-        x: 100,
-        duration: 1,
-        ease: 'power3.out',
-        delay: 0.3,
-      });
-
-      gsap.from(subtitleRef.current, {
-        opacity: 0,
-        x: 100,
-        duration: 0.8,
-        ease: 'power3.out',
-        delay: 0.6,
-      });
-
-      gsap.from(ctaRef.current, {
-        opacity: 0,
-        scale: 0.8,
-        duration: 0.6,
-        ease: 'back.out(1.7)',
-        delay: 0.9,
-      });
+      const timeline = gsap.timeline();
+      
+      timeline
+        .from(titleRef.current, {
+          opacity: 0,
+          x: 120,
+          y: 30,
+          duration: 1.2,
+          ease: 'power4.out',
+        })
+        .from(subtitleRef.current, {
+          opacity: 0,
+          x: 100,
+          y: 20,
+          duration: 1,
+          ease: 'power3.out',
+        }, '-=0.6')
+        .from(ctaRef.current, {
+          opacity: 0,
+          scale: 0.7,
+          y: 20,
+          duration: 0.8,
+          ease: 'back.out(2.5)',
+        }, '-=0.4');
     }, heroRef);
 
     return () => ctx.revert();
@@ -109,7 +153,7 @@ export default function Home() {
       <main>
         <section
           ref={heroRef}
-          className="relative h-screen w-full overflow-hidden"
+          className="relative h-[60vh] md:h-[70vh] lg:h-screen w-full overflow-hidden"
         >
           {!loading && siteImage && (
             <div ref={imageRef} className="absolute inset-0 w-full h-full">
@@ -120,38 +164,62 @@ export default function Home() {
                 className="object-cover"
                 priority
               />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
             </div>
           )}
 
           {!siteImage && (
-            <div className="absolute inset-0 bg-white"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200"></div>
           )}
+
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="text-center px-4">
+              <h1
+                ref={titleRef}
+                className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 drop-shadow-2xl"
+              >
+                {slides[currentSlide].title}
+              </h1>
+              <p
+                ref={subtitleRef}
+                className="text-lg md:text-xl lg:text-2xl text-white mb-6 md:mb-8 drop-shadow-lg"
+              >
+                {slides[currentSlide].subtitle}
+              </p>
+              <button
+                ref={ctaRef}
+                className="px-6 md:px-8 py-3 md:py-4 bg-white text-[#2c2c2c] rounded-full font-bold text-base md:text-lg hover:bg-[#2c2c2c] hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+              >
+                {slides[currentSlide].cta}
+              </button>
+            </div>
+          </div>
 
           <button
             onClick={prevSlide}
-            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-[#2c2c2c] hover:bg-[#1a1a1a] flex items-center justify-center transition-all duration-300 shadow-lg"
+            className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all duration-300 shadow-lg"
             aria-label="Previous slide"
           >
-            <ChevronRight className="w-6 h-6 text-white" />
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-[#2c2c2c]" />
           </button>
 
           <button
             onClick={nextSlide}
-            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-[#2c2c2c] hover:bg-[#1a1a1a] flex items-center justify-center transition-all duration-300 shadow-lg"
+            className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all duration-300 shadow-lg"
             aria-label="Next slide"
           >
-            <ChevronLeft className="w-6 h-6 text-white" />
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-[#2c2c2c]" />
           </button>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+          <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 md:gap-3 z-20">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                className={`h-2 md:h-3 rounded-full transition-all duration-300 ${
                   currentSlide === index
-                    ? 'bg-[#2c2c2c] w-8'
-                    : 'bg-[#2c2c2c]/30 hover:bg-[#2c2c2c]/50'
+                    ? 'bg-white w-6 md:w-8'
+                    : 'bg-white/50 w-2 md:w-3 hover:bg-white/70'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -159,74 +227,33 @@ export default function Home() {
           </div>
         </section>
 
-        <CategoriesList />
-
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-6">
-            <h2 className="text-4xl md:text-5xl font-bold text-right text-[#2c2c2c] mb-16">
-              المنتجات المميزة
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div
-                  key={item}
-                  className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group"
-                >
-                  <div className="h-64 bg-gray-100 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[#2c2c2c] opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-                    <span className="text-6xl text-[#2c2c2c] opacity-20 group-hover:opacity-30 transition-opacity duration-300">📦</span>
-                  </div>
-                  <div className="p-6 bg-white text-right">
-                    <h3 className="text-xl font-bold text-[#2c2c2c] mb-2">
-                      منتج رقم {item}
-                    </h3>
-                    <p className="text-[#2c2c2c] opacity-75 mb-4 text-sm">
-                      وصف مختصر للمنتج وميزاته الرائعة
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <button className="px-4 py-2 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors font-semibold text-sm">
-                        أضف للسلة
-                      </button>
-                      <span className="text-2xl font-bold text-[#2c2c2c]">
-                        99.99 ₪
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <div className="py-8 md:py-12 bg-gray-50">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-6 md:mb-8">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c] mb-3 md:mb-4">
+                أصنافنا
+              </h2>
+              <div className="h-1 w-20 md:w-24 bg-[#d4af37] mx-auto rounded-full"></div>
             </div>
           </div>
-        </section>
+          
+          <CategoriesMenu />
+        </div>
 
-        <section className="py-20 bg-gray-50">
-          <div className="container mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-right">
-              <div className="p-8">
-                <div className="w-16 h-16 bg-[#2c2c2c] rounded-full flex items-center justify-center mr-auto mb-4">
-                  <span className="text-3xl">🚚</span>
-                </div>
-                <h3 className="text-xl font-bold text-[#2c2c2c] mb-2">شحن مجاني</h3>
-                <p className="text-[#2c2c2c] opacity-75">للطلبات فوق 200 ₪</p>
-              </div>
-              <div className="p-8">
-                <div className="w-16 h-16 bg-[#2c2c2c] rounded-full flex items-center justify-center mr-auto mb-4">
-                  <span className="text-3xl">💳</span>
-                </div>
-                <h3 className="text-xl font-bold text-[#2c2c2c] mb-2">دفع آمن</h3>
-                <p className="text-[#2c2c2c] opacity-75">حماية كاملة لبياناتك</p>
-              </div>
-              <div className="p-8">
-                <div className="w-16 h-16 bg-[#2c2c2c] rounded-full flex items-center justify-center mr-auto mb-4">
-                  <span className="text-3xl">🔄</span>
-                </div>
-                <h3 className="text-xl font-bold text-[#2c2c2c] mb-2">إرجاع سهل</h3>
-                <p className="text-[#2c2c2c] opacity-75">خلال 14 يوم من الشراء</p>
-              </div>
+        {categoriesLoading ? (
+          <div className="py-20 bg-white">
+            <div className="container mx-auto px-6">
+              <div className="text-center text-[#2c2c2c]">جاري تحميل الأقسام...</div>
             </div>
           </div>
-        </section>
+        ) : (
+          categories.map((category, index) => (
+            <CategorySection key={category.id} category={category} index={index} />
+          ))
+        )}
       </main>
+
+      <Footer />
     </div>
   );
 }

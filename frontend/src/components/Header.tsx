@@ -35,27 +35,35 @@ export default function Header() {
     const ctx = gsap.context(() => {
       gsap.from(logoRef.current, {
         opacity: 0,
-        y: -20,
-        duration: 0.8,
-        ease: 'power3.out',
+        y: -30,
+        scale: 0.9,
+        duration: 1,
+        ease: 'power4.out',
       });
 
       gsap.from(navRef.current?.children || [], {
         opacity: 0,
-        y: -20,
-        duration: 0.6,
-        stagger: 0.1,
+        y: -25,
+        duration: 0.8,
+        stagger: {
+          amount: 0.3,
+          ease: 'power2.out',
+        },
         ease: 'power3.out',
-        delay: 0.2,
+        delay: 0.3,
       });
 
       gsap.from(iconsRef.current?.children || [], {
         opacity: 0,
         scale: 0,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: 'back.out(1.7)',
-        delay: 0.5,
+        rotation: -180,
+        duration: 0.7,
+        stagger: {
+          amount: 0.25,
+          ease: 'power2.out',
+        },
+        ease: 'back.out(2)',
+        delay: 0.6,
       });
     }, headerRef);
 
@@ -64,17 +72,19 @@ export default function Header() {
 
   const handleHover = (e: React.MouseEvent<HTMLElement>) => {
     gsap.to(e.currentTarget, {
-      y: -2,
-      duration: 0.3,
-      ease: 'power2.out',
+      y: -3,
+      scale: 1.05,
+      duration: 0.4,
+      ease: 'power3.out',
     });
   };
 
   const handleHoverOut = (e: React.MouseEvent<HTMLElement>) => {
     gsap.to(e.currentTarget, {
       y: 0,
-      duration: 0.3,
-      ease: 'power2.out',
+      scale: 1,
+      duration: 0.4,
+      ease: 'power3.out',
     });
   };
 
