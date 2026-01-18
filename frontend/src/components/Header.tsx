@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { ShoppingCart, Search, Menu, User } from 'lucide-react';
 import Image from 'next/image';
 import MobileSidebar from './MobileSidebar';
+import SearchDropdown from './SearchDropdown';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 
@@ -13,9 +14,11 @@ export default function Header() {
   const logoRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const iconsRef = useRef<HTMLDivElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [siteLogo, setSiteLogo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { totalItems } = useCart();
   const router = useRouter();
 
@@ -104,7 +107,8 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div
             ref={logoRef}
-            className="flex items-center gap-3 cursor-pointer order-3 lg:order-1"
+            onClick={() => router.push('/')}
+            className="flex items-center gap-3 cursor-pointer order-1 lg:order-1"
           >
             <div className="w-12 h-12 bg-[#2c2c2c] rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
               {!loading && siteLogo ? (
@@ -173,8 +177,10 @@ export default function Header() {
             </a>
           </nav>
 
-          <div ref={iconsRef} className="flex items-center gap-4 order-1 lg:order-3">
+          <div ref={iconsRef} className="flex items-center gap-4 order-3 lg:order-3 relative">
             <button
+              ref={searchButtonRef}
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="text-[#2c2c2c] hover:text-[#666] transition-colors p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
@@ -182,6 +188,11 @@ export default function Header() {
             >
               <Search size={20} />
             </button>
+            <SearchDropdown 
+              isOpen={isSearchOpen} 
+              onClose={() => setIsSearchOpen(false)}
+              buttonRef={searchButtonRef}
+            />
             <button
               className="relative text-[#2c2c2c] hover:text-[#666] transition-colors p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
@@ -209,7 +220,8 @@ export default function Header() {
         </div>
       </div>
     </header>
-    <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+    {isSidebarOpen && <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
     </>
   );
 }

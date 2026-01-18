@@ -17,11 +17,16 @@ import {
 interface Order {
   id: number;
   customer_name: string;
-  customer_email: string;
   customer_phone: string;
+  customer_city: string;
   customer_address: string;
-  total_amount: number;
+  shipping_method: string;
+  shipping_cost: number;
+  payment_method: string;
+  subtotal: number;
+  total: number;
   status: string;
+  items_count: number;
   created_at: string;
 }
 
@@ -114,7 +119,9 @@ export default function OrdersPage() {
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'processing':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed':
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'delivered':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -129,8 +136,10 @@ export default function OrdersPage() {
         return 'قيد الانتظار';
       case 'processing':
         return 'قيد المعالجة';
-      case 'completed':
-        return 'مكتملة';
+      case 'shipped':
+        return 'تم الشحن';
+      case 'delivered':
+        return 'تم التوصيل';
       case 'cancelled':
         return 'ملغية';
       default:
@@ -142,10 +151,10 @@ export default function OrdersPage() {
   const stats = {
     total: orders.length,
     pending: orders.filter(o => o.status === 'pending').length,
-    completed: orders.filter(o => o.status === 'completed').length,
+    completed: orders.filter(o => o.status === 'delivered').length,
     totalRevenue: orders
       .filter(o => o.status === 'completed')
-      .reduce((sum, o) => sum + Number(o.total_amount), 0),
+      .reduce((sum, o) => sum + Number(o.total), 0),
   };
 
   return (
@@ -234,7 +243,8 @@ export default function OrdersPage() {
               <option value="all">جميع الحالات</option>
               <option value="pending">قيد الانتظار</option>
               <option value="processing">قيد المعالجة</option>
-              <option value="completed">مكتملة</option>
+              <option value="shipped">تم الشحن</option>
+              <option value="delivered">تم التوصيل</option>
               <option value="cancelled">ملغية</option>
             </select>
           </div>
@@ -312,10 +322,10 @@ export default function OrdersPage() {
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
                         <span className="text-xl font-bold text-[#2c2c2c]">
-                          ₪{Number(order.total_amount).toFixed(2)}
+                          ₪{Number(order.total).toFixed(2)}
                         </span>
                         <span className="text-xs text-[#8b7355] mt-1">
-                          المبلغ الإجمالي
+                          {order.items_count} منتج
                         </span>
                       </div>
                     </td>
@@ -331,7 +341,8 @@ export default function OrdersPage() {
                       >
                         <option value="pending">قيد الانتظار</option>
                         <option value="processing">قيد المعالجة</option>
-                        <option value="completed">مكتملة</option>
+                        <option value="shipped">تم الشحن</option>
+                        <option value="delivered">تم التوصيل</option>
                         <option value="cancelled">ملغية</option>
                       </select>
                     </td>
@@ -359,7 +370,7 @@ export default function OrdersPage() {
                     <td className="px-6 py-5">
                       <div className="flex gap-2 justify-center">
                         <button
-                          onClick={() => alert(`عرض تفاصيل الطلب #${order.id}`)}
+                          onClick={() => window.location.href = `/admin/orders/${order.id}`}
                           className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8b7355] to-[#2c2c2c] text-white rounded-lg hover:from-[#2c2c2c] hover:to-[#8b7355] shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                         >
                           <Eye size={16} />

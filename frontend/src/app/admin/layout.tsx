@@ -22,6 +22,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const isLoginPage = pathname === '/admin';
 
@@ -52,11 +53,16 @@ export default function AdminLayout({
   return (
     <div className="flex flex-row-reverse min-h-screen bg-gradient-to-br from-[#f5f5dc] via-white to-[#e8e8c8]">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-xl flex flex-col border-r border-[#e8e8c8] fixed right-0 top-0 h-screen">
+      <aside className={`bg-white shadow-xl flex flex-col border-r border-[#e8e8c8] fixed right-0 top-0 h-screen transition-all duration-300 ${
+        sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'
+      }`}>
         {/* Logo/Header */}
         <div className="p-6 border-b border-[#e8e8c8]">
           <div className="flex items-center justify-between">
-            <button className="text-[#5E4A45] hover:text-[#2c2c2c] transition-colors">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-[#5E4A45] hover:text-[#2c2c2c] transition-colors"
+            >
               <ChevronRight size={24} />
             </button>
             <div className="text-center flex-1">
@@ -119,8 +125,18 @@ export default function AdminLayout({
         </div>
       </aside>
 
+      {/* Toggle Button when sidebar is closed */}
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="fixed top-4 right-4 z-50 p-3 bg-[#2c2c2c] text-white rounded-lg shadow-lg hover:bg-[#1a1a1a] transition-colors"
+        >
+          <ChevronRight size={24} className="rotate-180" />
+        </button>
+      )}
+
       {/* Main Content */}
-      <main className="flex-1 mr-64">
+      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-0'}`}>
         {children}
       </main>
     </div>

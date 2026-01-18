@@ -7,9 +7,26 @@ export class OrdersService {
 
   async findAll() {
     const query = `
-      SELECT o.*, u.name as customer_name, u.email as customer_email
+      SELECT 
+        o.id,
+        o.customer_name,
+        o.customer_phone,
+        o.customer_city,
+        o.customer_address,
+        o.shipping_method,
+        o.shipping_cost,
+        o.payment_method,
+        o.subtotal,
+        o.total,
+        o.status,
+        o.created_at,
+        o.updated_at,
+        COUNT(oi.id) as items_count
       FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.id, o.customer_name, o.customer_phone, o.customer_city, o.customer_address, 
+               o.shipping_method, o.shipping_cost, o.payment_method, o.subtotal, o.total, 
+               o.status, o.created_at, o.updated_at
       ORDER BY o.created_at DESC
     `;
     return this.databaseService.query(query);
@@ -17,14 +34,13 @@ export class OrdersService {
 
   async findOne(id: number) {
     const orderQuery = `
-      SELECT o.*, u.name as customer_name, u.email as customer_email
+      SELECT o.*
       FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
       WHERE o.id = ?
     `;
     
     const itemsQuery = `
-      SELECT oi.*, p.name as product_name, p.image_url
+      SELECT oi.*, p.image_url
       FROM order_items oi
       LEFT JOIN products p ON oi.product_id = p.id
       WHERE oi.order_id = ?
@@ -44,36 +60,57 @@ export class OrdersService {
   }
 
   async create(data: any) {
-    const connection = this.databaseService.getConnection();
-    
     try {
-      await connection.beginTransaction();
-
       const orderQuery = `
-        INSERT INTO orders (user_id, total_amount, status, shipping_address) 
-        VALUES (?, ?, ?, ?)
+        INSERT INTO orders (
+          customer_name, 
+          customer_phone, 
+          customer_city, 
+          customer_address,
+          shipping_method,
+          shipping_cost,
+          payment_method,
+          subtotal,
+          total,
+          status
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
       `;
       
       const orderResult: any = await this.databaseService.query(orderQuery, [
-        data.user_id,
-        data.total_amount,
-        'pending',
-        data.shipping_address,
+        data.customer_name,
+        data.customer_phone,
+        data.customer_city,
+        data.customer_address,
+        data.shipping_method,
+        data.shipping_cost,
+        data.payment_method,
+        data.subtotal,
+        data.total,
       ]);
 
       const orderId = orderResult.insertId;
 
       for (const item of data.items) {
         const itemQuery = `
-          INSERT INTO order_items (order_id, product_id, quantity, price) 
-          VALUES (?, ?, ?, ?)
+          INSERT INTO order_items (
+            order_id, 
+            product_id, 
+            product_name,
+            product_price,
+            quantity, 
+            subtotal
+          ) 
+          VALUES (?, ?, ?, ?, ?, ?)
         `;
         
         await this.databaseService.query(itemQuery, [
           orderId,
           item.product_id,
+          item.product_name,
+          item.product_price,
           item.quantity,
-          item.price,
+          item.subtotal,
         ]);
 
         const updateStockQuery = 'UPDATE products SET stock = stock - ? WHERE id = ?';
@@ -83,12 +120,10 @@ export class OrdersService {
         ]);
       }
 
-      await connection.commit();
-
       return { success: true, orderId, message: 'تم إنشاء الطلب بنجاح' };
     } catch (error) {
-      await connection.rollback();
-      return { success: false, message: 'فشل إنشاء الطلب' };
+      console.error('Error creating order:', error);
+      return { success: false, message: 'فشل إنشاء الطلب', error: error.message };
     }
   }
 
@@ -96,5 +131,16 @@ export class OrdersService {
     const query = 'UPDATE orders SET status = ? WHERE id = ?';
     await this.databaseService.query(query, [status, id]);
     return { success: true, message: 'تم تحديث حالة الطلب بنجاح' };
+  }
+
+  async delete(id: number) {
+    try {
+      const query = 'DELETE FROM orders WHERE id = ?';
+      await this.databaseService.query(query, [id]);
+      return { success: true, message: 'تم حذف الطلب بنجاح' };
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      return { success: false, message: 'فشل حذف الطلب' };
+    }
   }
 }

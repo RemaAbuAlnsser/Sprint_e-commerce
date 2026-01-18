@@ -151,7 +151,10 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button className="w-full py-3 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors font-semibold text-lg mb-3">
+              <button 
+                onClick={() => router.push('/checkout')}
+                className="w-full py-3 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors font-semibold text-lg mb-3"
+              >
                 إتمام الطلب
               </button>
               

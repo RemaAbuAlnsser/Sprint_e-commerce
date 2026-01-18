@@ -138,9 +138,14 @@ export default function CategorySection({ category, index }: CategorySectionProp
       const cartRect = cartIcon?.getBoundingClientRect();
       
       if (cartRect) {
+        const targetLeft = cartRect.left + cartRect.width / 2;
+        const targetTop = cartRect.top + cartRect.height / 2;
+        
+        console.log('Flying from', rect.left, 'to', targetLeft);
+        
         gsap.to(clone, {
-          left: `${cartRect.left + cartRect.width / 2 - 10}px`,
-          top: `${cartRect.top + cartRect.height / 2 - 10}px`,
+          left: `${targetLeft - 10}px`,
+          top: `${targetTop - 10}px`,
           width: 20,
           height: 20,
           opacity: 0,
@@ -271,8 +276,8 @@ export default function CategorySection({ category, index }: CategorySectionProp
               key={product.id}
               className="w-full group"
             >
-              <div className="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col">
-                <div className="relative aspect-square overflow-hidden bg-gray-100 flex-shrink-0">
+              <div className="product-card h-full flex flex-col">
+                <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 flex-shrink-0 mb-3">
                   {product.image_url ? (
                     <>
                       <Image
@@ -280,7 +285,7 @@ export default function CategorySection({ category, index }: CategorySectionProp
                         alt={product.name}
                         fill
                         unoptimized
-                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       {product.hover_image_url && (
                         <Image
@@ -297,29 +302,16 @@ export default function CategorySection({ category, index }: CategorySectionProp
                       <span className="text-6xl opacity-20">📦</span>
                     </div>
                   )}
-
-                  <div className="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-[#2c2c2c] hover:text-white transition-all duration-300">
-                      <Eye className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  </div>
                 </div>
 
-                <div className="p-3 md:p-4 text-right flex flex-col flex-1">
-                  <h3 className="text-sm md:text-lg font-bold text-[#2c2c2c] mb-1 md:mb-2 line-clamp-1 min-h-[1.5rem] md:min-h-[2rem]">
+                <div className="text-right flex flex-col flex-1">
+                  <h3 className="text-sm font-medium text-gray-800 mb-2 line-clamp-2">
                     {product.name}
                   </h3>
-                  <div className="min-h-[2.5rem] md:min-h-[3rem] mb-2 md:mb-3">
-                    {product.description && (
-                      <p className="text-xs md:text-sm text-gray-600 line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
-                  </div>
                   <div className="flex items-center justify-between gap-2 mt-auto">
                     <button 
                       onClick={(e) => handleAddToCart(product, e.currentTarget)}
-                      className="flex-1 px-3 py-1.5 md:px-4 md:py-2 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors font-semibold text-xs md:text-sm flex items-center justify-center gap-1 md:gap-2"
+                      className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-xs flex items-center justify-center gap-1.5"
                     >
                       <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
                       <span className="hidden sm:inline">أضف للسلة</span>

@@ -245,16 +245,16 @@ export default function CategoryPage() {
               {products.map((product) => (
                 <div
                   key={product.id}
-                  className="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
+                  className="product-card group"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                  <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-3">
                     {product.image_url ? (
                       <>
                         <Image
                           src={`http://localhost:3000${product.image_url}`}
                           alt={product.name}
                           fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         {product.hover_image_url && (
                           <Image
@@ -271,12 +271,6 @@ export default function CategoryPage() {
                       </div>
                     )}
 
-                    <div className="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-[#2c2c2c] hover:text-white transition-all duration-300">
-                        <Eye className="w-4 h-4 md:w-5 md:h-5" />
-                      </button>
-                    </div>
-
                     {product.stock <= 0 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span className="bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm">
@@ -286,19 +280,14 @@ export default function CategoryPage() {
                     )}
                   </div>
 
-                  <div className="p-3 md:p-4 text-right">
-                    <h3 className="text-sm md:text-base lg:text-lg font-bold text-[#2c2c2c] mb-1 md:mb-2 line-clamp-1">
+                  <div className="text-right">
+                    <h3 className="text-sm font-medium text-gray-800 mb-2 line-clamp-2">
                       {product.name}
                     </h3>
-                    {product.description && (
-                      <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-3 line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
                     <div className="flex items-center justify-between gap-2">
                       <button
                         onClick={(e) => handleAddToCart(product, e.currentTarget)}
-                        className="flex-1 px-3 py-1.5 md:px-4 md:py-2 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors font-semibold text-xs md:text-sm flex items-center justify-center gap-1 md:gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={product.stock <= 0}
                       >
                         <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
