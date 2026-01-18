@@ -15,6 +15,17 @@ export class ProductsService {
     return this.databaseService.query(query);
   }
 
+  async findByCategory(categoryId: number) {
+    const query = `
+      SELECT p.*, c.name as category_name 
+      FROM products p 
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.category_id = ? AND p.status = 'published'
+      ORDER BY p.created_at DESC
+    `;
+    return this.databaseService.query(query, [categoryId]);
+  }
+
   async findOne(id: number) {
     const query = `
       SELECT p.*, c.name as category_name 
