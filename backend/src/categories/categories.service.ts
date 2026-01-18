@@ -10,6 +10,19 @@ export class CategoriesService {
     return this.databaseService.query(query);
   }
 
+  async findAllWithSubcategories() {
+    const categoriesQuery = 'SELECT * FROM categories ORDER BY name';
+    const categories: any = await this.databaseService.query(categoriesQuery);
+    
+    for (const category of categories) {
+      const subcategoriesQuery = 'SELECT * FROM subcategories WHERE category_id = ? ORDER BY name';
+      const subcategories = await this.databaseService.query(subcategoriesQuery, [category.id]);
+      category.subcategories = subcategories;
+    }
+    
+    return categories;
+  }
+
   async findOne(id: number) {
     const query = 'SELECT * FROM categories WHERE id = ?';
     const categories: any = await this.databaseService.query(query, [id]);

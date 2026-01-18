@@ -1,14 +1,35 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ShoppingCart, Search, Menu, User, Heart } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const iconsRef = useRef<HTMLDivElement>(null);
+  const [siteLogo, setSiteLogo] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setSiteLogo(data.site_logo);
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -39,7 +60,7 @@ export default function Header() {
     }, headerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [loading]);
 
   const handleHover = (e: React.MouseEvent<HTMLElement>) => {
     gsap.to(e.currentTarget, {
@@ -60,90 +81,32 @@ export default function Header() {
   return (
     <header
       ref={headerRef}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-[#f5f5dc]"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200"
     >
       <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
-          <div
-            ref={logoRef}
-            className="flex items-center space-x-3 space-x-reverse cursor-pointer"
-          >
-            <div className="w-12 h-12 bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-2xl font-bold text-[#2c2c2c]">S</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-[#2c2c2c] leading-tight">Sprint Store</span>
-              <span className="text-xs text-[#8b7355]">متجرك الموثوق</span>
-            </div>
-          </div>
-
-          <nav ref={navRef} className="hidden lg:flex items-center space-x-8 space-x-reverse">
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              الرئيسية
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#8b7355] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              المنتجات
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#8b7355] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              العروض
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#8b7355] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              من نحن
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#8b7355] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              تواصل معنا
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#8b7355] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-          </nav>
-
-          <div ref={iconsRef} className="flex items-center space-x-4 space-x-reverse">
+          <div ref={iconsRef} className="flex items-center gap-4">
             <button
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors p-2 hover:bg-[#f5f5dc] rounded-full"
+              className="lg:hidden text-[#2c2c2c] p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
-              aria-label="Search"
+              aria-label="Menu"
             >
-              <Search size={20} />
+              <Menu size={20} />
             </button>
             <button
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors p-2 hover:bg-[#f5f5dc] rounded-full"
+              className="relative text-[#2c2c2c] hover:text-[#666] transition-colors p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
-              aria-label="Wishlist"
+              aria-label="Cart"
             >
-              <Heart size={20} />
+              <ShoppingCart size={20} />
+              <span className="absolute -top-1 -left-1 bg-[#2c2c2c] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                0
+              </span>
             </button>
             <button
-              className="text-[#2c2c2c] hover:text-[#8b7355] transition-colors p-2 hover:bg-[#f5f5dc] rounded-full"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
               aria-label="Account"
@@ -151,24 +114,92 @@ export default function Header() {
               <User size={20} />
             </button>
             <button
-              className="relative text-[#2c2c2c] hover:text-[#8b7355] transition-colors p-2 hover:bg-[#f5f5dc] rounded-full"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
-              aria-label="Cart"
+              aria-label="Wishlist"
             >
-              <ShoppingCart size={20} />
-              <span className="absolute -top-1 -right-1 bg-[#2c2c2c] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                0
-              </span>
+              <Heart size={20} />
             </button>
             <button
-              className="lg:hidden text-[#2c2c2c] p-2 hover:bg-[#f5f5dc] rounded-full"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
-              aria-label="Menu"
+              aria-label="Search"
             >
-              <Menu size={20} />
+              <Search size={20} />
             </button>
+          </div>
+
+          <nav ref={navRef} className="hidden lg:flex items-center gap-8">
+            <a
+              href="#"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
+              onMouseEnter={handleHover}
+              onMouseLeave={handleHoverOut}
+            >
+              تواصل معنا
+              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a
+              href="#"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
+              onMouseEnter={handleHover}
+              onMouseLeave={handleHoverOut}
+            >
+              من نحن
+              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a
+              href="#"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
+              onMouseEnter={handleHover}
+              onMouseLeave={handleHoverOut}
+            >
+              العروض
+              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a
+              href="#"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
+              onMouseEnter={handleHover}
+              onMouseLeave={handleHoverOut}
+            >
+              المنتجات
+              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a
+              href="#"
+              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
+              onMouseEnter={handleHover}
+              onMouseLeave={handleHoverOut}
+            >
+              الرئيسية
+              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
+            </a>
+          </nav>
+
+          <div
+            ref={logoRef}
+            className="flex items-center gap-3 cursor-pointer"
+          >
+            <div className="flex flex-col text-right">
+              <span className="text-xl font-bold text-[#2c2c2c] leading-tight">متجر Sprint</span>
+              <span className="text-xs text-[#666]">متجرك الموثوق</span>
+            </div>
+            <div className="w-12 h-12 bg-[#2c2c2c] rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+              {!loading && siteLogo ? (
+                <Image
+                  src={`http://localhost:3000${siteLogo}`}
+                  alt="Site Logo"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-white">S</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
