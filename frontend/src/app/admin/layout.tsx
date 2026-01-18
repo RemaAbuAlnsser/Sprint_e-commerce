@@ -23,12 +23,14 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
+  const isLoginPage = pathname === '/admin';
+
   const handleLogout = () => {
-    router.push('/login');
+    router.push('/admin');
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, path: '/admin' },
+    { id: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, path: '/admin/dashboard' },
     { id: 'categories', label: 'الفئات', icon: FileText, path: '/admin/categories' },
     { id: 'companies', label: 'الشركات', icon: Building2, path: '/admin/companies' },
     { id: 'products', label: 'المنتجات', icon: Package, path: '/admin/products' },
@@ -42,6 +44,10 @@ export default function AdminLayout({
       router.push(item.path);
     }
   };
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-row-reverse min-h-screen bg-gradient-to-br from-[#f5f5dc] via-white to-[#e8e8c8]">
