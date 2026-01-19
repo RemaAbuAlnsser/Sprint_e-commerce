@@ -21,6 +21,7 @@ interface Product {
   hover_image_url?: string;
   category_name: string;
   stock: number;
+  company_id?: number;
 }
 
 interface Category {
@@ -34,6 +35,9 @@ export default function CategoryPage() {
   const router = useRouter();
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -63,6 +67,29 @@ export default function CategoryPage() {
           const productsData = await productsRes.json();
           console.log('Products data:', productsData.length, 'products');
           setProducts(productsData);
+          setAllProducts(productsData);
+          
+          // Extract unique companies from products
+          const uniqueCompanies = productsData
+            .filter((product: Product) => product.company_id)
+            .reduce((acc: any[], product: Product) => {
+              const existingCompany = acc.find(c => c.id === product.company_id);
+              if (!existingCompany && product.company_id) {
+                // Fetch company details
+                fetchCompanyDetails(product.company_id).then(company => {
+                  if (company) {
+                    setCompanies(prev => {
+                      const exists = prev.find(c => c.id === company.id);
+                      if (!exists) {
+                        return [...prev, company];
+                      }
+                      return prev;
+                    });
+                  }
+                });
+              }
+              return acc;
+            }, []);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -73,6 +100,32 @@ export default function CategoryPage() {
 
     fetchCategoryAndProducts();
   }, [params.id]);
+
+  const fetchCompanyDetails = async (companyId: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/companies/${companyId}`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error('Error fetching company:', error);
+    }
+    return null;
+  };
+
+  // Filter products when company selection changes
+  useEffect(() => {
+    if (selectedCompany) {
+      const filtered = allProducts.filter(product => product.company_id === selectedCompany);
+      setProducts(filtered);
+    } else {
+      setProducts(allProducts);
+    }
+  }, [selectedCompany, allProducts]);
+
+  const handleCompanyFilter = (companyId: number | null) => {
+    setSelectedCompany(companyId);
+  };
 
   const handleAddToCart = useCallback(async (product: Product, buttonRef: HTMLButtonElement) => {
     createFlyingAnimation(buttonRef, product, async () => {
@@ -170,6 +223,44 @@ export default function CategoryPage() {
               {products.length} {products.length === 1 ? 'منتج' : 'منتجات'}
             </p>
           </div>
+
+          {/* Company Filter */}
+          {companies.length > 0 && (
+            <div className="mb-8 md:mb-12">
+              <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+                <button
+                  onClick={() => handleCompanyFilter(null)}
+                  className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                    selectedCompany === null
+                      ? 'bg-[#d4af37] text-white shadow-lg shadow-[#d4af37]/25'
+                      : 'bg-white text-[#2c2c2c] border-2 border-gray-200 hover:border-[#d4af37] hover:text-[#d4af37]'
+                  }`}
+                >
+                  جميع الشركات
+                </button>
+                {companies.map((company) => (
+                  <button
+                    key={company.id}
+                    onClick={() => handleCompanyFilter(company.id)}
+                    className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 flex items-center gap-2 ${
+                      selectedCompany === company.id
+                        ? 'bg-[#d4af37] text-white shadow-lg shadow-[#d4af37]/25'
+                        : 'bg-white text-[#2c2c2c] border-2 border-gray-200 hover:border-[#d4af37] hover:text-[#d4af37]'
+                    }`}
+                  >
+                    {company.logo_url && (
+                      <img
+                        src={`http://localhost:3000${company.logo_url}`}
+                        alt={company.name}
+                        className="w-6 h-6 object-contain rounded"
+                      />
+                    )}
+                    <span>{company.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {products.length === 0 ? (
             <div className="text-center py-20">
