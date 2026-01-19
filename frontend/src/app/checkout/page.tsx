@@ -87,7 +87,18 @@ export default function CheckoutPage() {
         clearCart();
       } else {
         console.error('Order failed:', result);
-        alert('حدث خطأ أثناء إرسال الطلب: ' + (result.message || 'خطأ غير معروف') + '\n' + (result.error || ''));
+        
+        // إذا كانت هناك منتجات غير متوفرة، عرض تفاصيلها
+        if (result.unavailableProducts && result.unavailableProducts.length > 0) {
+          let errorMessage = result.message + '\n\n';
+          result.unavailableProducts.forEach((product: any) => {
+            errorMessage += `• ${product.name}: ${product.reason}\n`;
+          });
+          errorMessage += '\nيرجى تحديث السلة والمحاولة مرة أخرى.';
+          alert(errorMessage);
+        } else {
+          alert('حدث خطأ أثناء إرسال الطلب: ' + (result.message || 'خطأ غير معروف') + '\n' + (result.error || ''));
+        }
       }
     } catch (error: any) {
       console.error('Error submitting order:', error);
@@ -138,11 +149,11 @@ export default function CheckoutPage() {
               
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="flex gap-3 pb-3 border-b">
+                  <div key={`${item.id}-${item.color_name || 'default'}`} className="flex gap-3 pb-3 border-b">
                     <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      {item.image_url ? (
+                      {(item.color_image_url || item.image_url) ? (
                         <Image
-                          src={`http://localhost:3000${item.image_url}`}
+                          src={`http://localhost:3000${item.color_image_url || item.image_url}`}
                           alt={item.name}
                           width={64}
                           height={64}
@@ -158,6 +169,9 @@ export default function CheckoutPage() {
                       <h3 className="text-sm font-semibold text-[#2c2c2c] line-clamp-1">
                         {item.name}
                       </h3>
+                      {item.color_name && (
+                        <p className="text-xs text-gray-500">اللون: {item.color_name}</p>
+                      )}
                       <p className="text-xs text-gray-500">الكمية: {item.quantity}</p>
                       <p className="text-sm font-bold text-[#2c2c2c]">
                         {(Number(item.price) * item.quantity).toFixed(2)} ₪

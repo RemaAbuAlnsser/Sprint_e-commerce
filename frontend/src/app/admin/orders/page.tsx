@@ -158,23 +158,23 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#2c2c2c]">إدارة الطلبات</h1>
-        <p className="text-[#8b7355] mt-2">متابعة وإدارة طلبات العملاء</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#2c2c2c]">إدارة الطلبات</h1>
+        <p className="text-sm md:text-base text-[#8b7355] mt-1 md:mt-2">متابعة وإدارة طلبات العملاء</p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-6 shadow-lg border-2 border-purple-200">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+        <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg border-2 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-600 text-sm mb-1 font-medium">إجمالي الطلبات</p>
-              <p className="text-3xl font-bold text-purple-700">{stats.total}</p>
+              <p className="text-purple-600 text-xs md:text-sm mb-1 font-medium">إجمالي الطلبات</p>
+              <p className="text-2xl md:text-3xl font-bold text-purple-700">{stats.total}</p>
             </div>
-            <div className="bg-purple-300/50 p-3 rounded-xl">
-              <Package size={28} className="text-purple-700" />
+            <div className="bg-purple-300/50 p-2 md:p-3 rounded-lg md:rounded-xl">
+              <Package size={20} className="md:w-7 md:h-7 text-purple-700" />
             </div>
           </div>
         </div>
@@ -253,7 +253,8 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="bg-white rounded-2xl shadow-lg border border-[#e8e8c8] overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full border-collapse" dir="rtl">
             <thead>
               <tr className="bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8]">
@@ -390,6 +391,103 @@ export default function OrdersPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden p-4 space-y-4">
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <Package size={48} className="mx-auto mb-4 opacity-30 text-[#8b7355]" />
+              <p className="text-lg font-medium text-[#8b7355]">لا توجد طلبات</p>
+            </div>
+          ) : (
+            filteredOrders.map((order, index) => (
+              <div key={order.id} className="bg-gradient-to-br from-[#f5f5dc]/20 to-white border border-[#e8e8c8] rounded-xl p-4 shadow-sm">
+                {/* Order Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] text-[#2c2c2c] font-bold text-sm">
+                      #
+                    </span>
+                    <span className="font-bold text-[#2c2c2c]">طلب رقم {order.id}</span>
+                  </div>
+                  <select
+                    value={order.status}
+                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold border focus:outline-none ${getStatusColor(order.status)}`}
+                  >
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="processing">قيد المعالجة</option>
+                    <option value="shipped">تم الشحن</option>
+                    <option value="delivered">تم التوصيل</option>
+                    <option value="cancelled">ملغية</option>
+                  </select>
+                </div>
+
+                {/* Customer Info */}
+                <div className="mb-3">
+                  <h4 className="font-bold text-[#2c2c2c] mb-2">{order.customer_name}</h4>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-[#8b7355]">
+                      <Phone size={14} />
+                      <span>{order.customer_phone}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-[#8b7355]">
+                      <MapPin size={14} className="mt-0.5 flex-shrink-0" />
+                      <span className="line-clamp-2">{order.customer_address}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <span className="text-xs text-gray-500 block">المبلغ الإجمالي</span>
+                    <span className="text-lg font-bold text-[#2c2c2c]">
+                      ₪{Number(order.total).toFixed(2)}
+                    </span>
+                    <span className="text-xs text-[#8b7355] block">
+                      {order.items_count} منتج
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 block">تاريخ الطلب</span>
+                    <span className="text-sm font-medium text-[#2c2c2c] block">
+                      {new Date(order.created_at).toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                    <span className="text-xs text-[#8b7355]">
+                      {new Date(order.created_at).toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-3 border-t border-[#e8e8c8]">
+                  <button
+                    onClick={() => window.location.href = `/admin/orders/${order.id}`}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-[#8b7355] to-[#2c2c2c] text-white rounded-lg hover:from-[#2c2c2c] hover:to-[#8b7355] transition-all duration-200 text-sm font-medium"
+                  >
+                    <Eye size={14} />
+                    <span>عرض التفاصيل</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(order.id)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    title="حذف"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -107,13 +107,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    addToCart({
+  const handleAddToCart = async (product: Product) => {
+    const result = await addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       image_url: product.image_url,
     });
+    
+    if (!result.success) {
+      alert(result.message || 'فشل إضافة المنتج');
+    }
   };
 
   if (!isOpen) return null;
@@ -194,27 +198,28 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     )}
                   </div>
 
-                  <div className="p-3">
+                  <div className="p-3 text-center">
                     <h3 
                       onClick={() => {
                         router.push(`/product/${encodeURIComponent(product.name)}`);
                         handleClose();
                       }}
-                      className="text-sm font-bold text-[#2c2c2c] mb-2 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
+                      className="text-lg font-bold text-[#2c2c2c] mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
                     >
                       {product.name}
                     </h3>
-                    <div className="flex items-center justify-between">
+                    <div className="mb-3">
                       <span className="text-lg font-bold text-[#d4af37]">
                         ₪{Number(product.price).toFixed(2)}
                       </span>
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="p-2 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors"
-                      >
-                        <ShoppingCart size={16} />
-                      </button>
                     </div>
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors text-sm font-medium"
+                    >
+                      <ShoppingCart size={16} />
+                      <span>أضف للسلة</span>
+                    </button>
                   </div>
                 </div>
               ))}

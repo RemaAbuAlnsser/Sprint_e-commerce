@@ -8,13 +8,15 @@ interface CartItem {
   price: number;
   quantity: number;
   image_url?: string;
+  color_name?: string;
+  color_image_url?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: { id: number; name: string; price: number; image_url?: string }) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addToCart: (product: { id: number; name: string; price: number; image_url?: string; color_name?: string; color_image_url?: string }) => Promise<{ success: boolean; message?: string }>;
+  removeFromCart: (productId: number, colorName?: string) => void;
+  updateQuantity: (productId: number, quantity: number, colorName?: string) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -36,35 +38,72 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (product: { id: number; name: string; price: number; image_url?: string }) => {
-    setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  const addToCart = async (product: { id: number; name: string; price: number; image_url?: string; color_name?: string; color_image_url?: string }) => {
+    try {
+      // فحص الكمية المتوفرة من الباك إند
+      const response = await fetch(`http://localhost:3000/products/${product.id}`);
+      if (!response.ok) {
+        return { success: false, message: 'فشل التحقق من توفر المنتج' };
       }
       
-      return [...prevItems, { ...product, quantity: 1 }];
-    });
+      const productData = await response.json();
+      
+      // حساب الكمية الحالية في السلة (مع مراعاة اللون)
+      const existingItem = items.find((item) => 
+        item.id === product.id && 
+        item.color_name === product.color_name
+      );
+      const currentQuantity = existingItem ? existingItem.quantity : 0;
+      const newQuantity = currentQuantity + 1;
+      
+      // التحقق من توفر الكمية
+      if (productData.stock < newQuantity) {
+        const message = productData.stock === 0 
+          ? `عذراً، المنتج "${product.name}" غير متوفر حالياً`
+          : `عذراً، الكمية المتوفرة من "${product.name}" هي ${productData.stock} فقط`;
+        return { success: false, message };
+      }
+      
+      // إضافة المنتج للسلة
+      setItems((prevItems) => {
+        const existingItem = prevItems.find((item) => 
+          item.id === product.id && 
+          item.color_name === product.color_name
+        );
+        
+        if (existingItem) {
+          return prevItems.map((item) =>
+            item.id === product.id && item.color_name === product.color_name
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        }
+        
+        return [...prevItems, { ...product, quantity: 1 }];
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error checking product availability:', error);
+      return { success: false, message: 'حدث خطأ أثناء التحقق من توفر المنتج' };
+    }
   };
 
-  const removeFromCart = (productId: number) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+  const removeFromCart = (productId: number, colorName?: string) => {
+    setItems((prevItems) => prevItems.filter((item) => 
+      !(item.id === productId && item.color_name === colorName)
+    ));
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = (productId: number, quantity: number, colorName?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, colorName);
       return;
     }
     
     setItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === productId && item.color_name === colorName ? { ...item, quantity } : item
       )
     );
   };

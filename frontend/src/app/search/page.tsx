@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Image from 'next/image';
 import { Search, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
 
 interface Product {
   id: number;
@@ -25,6 +26,7 @@ export default function SearchPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { addToCart } = useCart();
+  const { isAnimating, createFlyingAnimation } = useFlyingAnimation();
 
   useEffect(() => {
     fetchAllProducts();
@@ -65,13 +67,19 @@ export default function SearchPage() {
     filterProducts(searchQuery);
   };
 
-  const handleAddToCart = (product: Product) => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url,
-      quantity: 1,
+  const handleAddToCart = async (product: Product, buttonElement: HTMLElement) => {
+    // Start flying animation
+    createFlyingAnimation(buttonElement, product, async () => {
+      const result = await addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+      });
+      
+      if (!result.success) {
+        alert(result.message || 'فشل إضافة المنتج');
+      }
     });
   };
 
@@ -155,27 +163,28 @@ export default function SearchPage() {
                   )}
                 </div>
 
-                <div className="p-4">
-                  <h3 className="text-lg font-bold text-[#2c2c2c] mb-2 line-clamp-2">
+                <div className="p-4 text-center">
+                  <h3 className="text-xl font-bold text-[#2c2c2c] mb-3 line-clamp-2">
                     {product.name}
                   </h3>
+                  <div className="mb-4">
+                    <span className="text-lg font-bold text-[#d4af37]">
+                      ₪{Number(product.price).toFixed(2)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => handleAddToCart(product, e.currentTarget)}
+                    disabled={isAnimating}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors text-sm font-medium disabled:opacity-50"
+                  >
+                    <ShoppingCart size={16} />
+                    <span>{isAnimating ? 'جاري الإضافة...' : 'أضف للسلة'}</span>
+                  </button>
                   {product.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <p className="text-xs text-gray-600 mt-3 line-clamp-2">
                       {product.description}
                     </p>
                   )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-[#d4af37]">
-                      ₪{Number(product.price).toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#2c2c2c] text-white rounded-full hover:bg-[#1a1a1a] transition-colors text-sm"
-                    >
-                      <ShoppingCart size={16} />
-                      <span>أضف للسلة</span>
-                    </button>
-                  </div>
                 </div>
               </div>
             ))}

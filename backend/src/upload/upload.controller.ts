@@ -225,4 +225,40 @@ export class UploadController {
       message: 'Color image uploaded successfully',
     };
   }
+
+  @Post('product-gallery-image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/products/gallery',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `gallery-${uniqueSuffix}${ext}`;
+          callback(null, filename);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('Only image files are allowed!'), false);
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+    }),
+  )
+  uploadProductGalleryImage(@UploadedFile() file: any) {
+    if (!file) {
+      return { success: false, message: 'No file uploaded' };
+    }
+
+    const imageUrl = `/uploads/products/gallery/${file.filename}`;
+    return {
+      success: true,
+      imageUrl,
+      message: 'Gallery image uploaded successfully',
+    };
+  }
 }

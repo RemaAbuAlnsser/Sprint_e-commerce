@@ -12,10 +12,9 @@ import {
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   
-  // Site Image State
-  const [currentSiteImage, setCurrentSiteImage] = useState<string>('');
-  const [newSiteImage, setNewSiteImage] = useState<string>('');
-  const [siteImagePreview, setSiteImagePreview] = useState<string>('');
+  // Site Images State (multiple images)
+  const [currentSiteImages, setCurrentSiteImages] = useState<Array<{id?: number; url: string}>>([]);
+  const [newSiteImages, setNewSiteImages] = useState<Array<{url: string; preview: string}>>([]);
   
   // Logo State
   const [currentLogo, setCurrentLogo] = useState<string>('');
@@ -31,38 +30,46 @@ export default function SettingsPage() {
       const response = await fetch('http://localhost:3000/settings');
       const data = await response.json();
       
-      setCurrentSiteImage(data.site_image || '');
+      // Load site images (assuming backend returns array)
+      if (data.site_images && Array.isArray(data.site_images)) {
+        setCurrentSiteImages(data.site_images);
+      }
       setCurrentLogo(data.site_logo || '');
     } catch (error) {
       console.error('Error loading settings:', error);
     }
   };
 
-  const handleSiteImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSiteImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleSiteImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        
+        reader.onloadend = async () => {
+          const preview = reader.result as string;
+          
+          // Upload to server
+          const formData = new FormData();
+          formData.append('image', file);
 
-      // Upload to server
-      const formData = new FormData();
-      formData.append('image', file);
+          try {
+            const response = await fetch('http://localhost:3000/upload/category-image', {
+              method: 'POST',
+              body: formData,
+            });
 
-      try {
-        const response = await fetch('http://localhost:3000/upload/category-image', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          setNewSiteImage(result.imageUrl);
-        }
-      } catch (error) {
-        console.error('Error uploading site image:', error);
+            const result = await response.json();
+            if (result.success) {
+              setNewSiteImages(prev => [...prev, { url: result.imageUrl, preview }]);
+            }
+          } catch (error) {
+            console.error('Error uploading site image:', error);
+          }
+        };
+        
+        reader.readAsDataURL(file);
       }
     }
   };
@@ -102,8 +109,8 @@ export default function SettingsPage() {
     try {
       const updateData: any = {};
       
-      if (newSiteImage) {
-        updateData.site_image = newSiteImage;
+      if (newSiteImages.length > 0) {
+        updateData.site_images = newSiteImages.map(img => img.url);
       }
       
       if (newLogo) {
@@ -121,11 +128,10 @@ export default function SettingsPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Update current images
-        if (newSiteImage) {
-          setCurrentSiteImage(newSiteImage);
-          setNewSiteImage('');
-          setSiteImagePreview('');
+        // Update current images - replace all existing with new ones
+        if (newSiteImages.length > 0) {
+          setCurrentSiteImages(newSiteImages.map(img => ({ url: img.url })));
+          setNewSiteImages([]);
         }
         
         if (newLogo) {
@@ -146,9 +152,12 @@ export default function SettingsPage() {
     }
   };
 
-  const handleResetSiteImage = () => {
-    setNewSiteImage('');
-    setSiteImagePreview('');
+  const removeNewSiteImage = (index: number) => {
+    setNewSiteImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeCurrentSiteImage = (index: number) => {
+    setCurrentSiteImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleResetLogo = () => {
@@ -175,76 +184,110 @@ export default function SettingsPage() {
           </div>
 
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Current Site Image */}
-              <div>
-                <h3 className="text-lg font-bold text-[#2c2c2c] mb-4">الصورة الحالية</h3>
-                <div className="border-2 border-[#e8e8c8] rounded-xl p-6 bg-gradient-to-br from-[#f5f5dc]/30 to-[#e8e8c8]/30">
-                  {currentSiteImage ? (
-                    <div className="relative">
+            {/* Current Site Images */}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-[#2c2c2c] mb-4">الصور الحالية ({currentSiteImages.length})</h3>
+              {currentSiteImages.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {currentSiteImages.map((image, index) => (
+                    <div key={index} className="relative group">
                       <img
-                        src={`http://localhost:3000${currentSiteImage}`}
-                        alt="Current Site"
-                        className="w-full h-64 object-cover rounded-lg"
-                      />
-                      <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                        نشطة
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-64 text-[#8b7355]">
-                      <ImageIcon size={48} className="opacity-30 mb-2" />
-                      <p className="text-sm">لا توجد صورة حالية</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* New Site Image Upload */}
-              <div>
-                <h3 className="text-lg font-bold text-[#2c2c2c] mb-4">رفع صورة جديدة</h3>
-                <div className="border-2 border-dashed border-[#e8e8c8] rounded-xl p-6 hover:border-[#8b7355] transition-colors">
-                  {siteImagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={siteImagePreview}
-                        alt="New Site Preview"
-                        className="w-full h-64 object-cover rounded-lg"
+                        src={`http://localhost:3000${image.url}`}
+                        alt={`Site Image ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg border-2 border-[#e8e8c8]"
                       />
                       <button
                         type="button"
-                        onClick={handleResetSiteImage}
-                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        onClick={() => removeCurrentSiteImage(index)}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <X size={16} />
                       </button>
-                      <div className="absolute top-2 left-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                        جديدة
+                      <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
+                        #{index + 1}
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-64">
-                      <Upload className="text-[#8b7355] mb-4" size={48} />
-                      <p className="text-[#8b7355] mb-4 text-center">
-                        اضغط لرفع صورة جديدة للموقع
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleSiteImageChange}
-                        className="hidden"
-                        id="site-image-upload"
-                      />
-                      <label
-                        htmlFor="site-image-upload"
-                        className="px-6 py-3 bg-gradient-to-r from-[#2c2c2c] to-[#8b7355] text-white rounded-xl cursor-pointer hover:shadow-lg transition-all duration-300 font-medium"
-                      >
-                        اختر صورة
-                      </label>
-                    </div>
-                  )}
+                  ))}
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-[#e8e8c8] rounded-xl p-8 text-center">
+                  <ImageIcon size={48} className="mx-auto text-[#8b7355] opacity-30 mb-2" />
+                  <p className="text-[#8b7355]">لا توجد صور حالية</p>
+                </div>
+              )}
+            </div>
+
+            {/* New Site Images Upload */}
+            <div>
+              <h3 className="text-lg font-bold text-[#2c2c2c] mb-4">رفع صور جديدة</h3>
+              
+              {/* Warning Message */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 text-yellow-600 mt-0.5">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-yellow-800 mb-1">تنبيه مهم</h4>
+                    <p className="text-sm text-yellow-700">
+                      عند رفع صور جديدة، سيتم <strong>حذف جميع الصور الحالية</strong> واستبدالها بالصور الجديدة فقط.
+                    </p>
+                  </div>
                 </div>
               </div>
+              
+              <div className="border-2 border-dashed border-[#e8e8c8] rounded-xl p-6 hover:border-[#8b7355] transition-colors mb-4">
+                <div className="flex flex-col items-center justify-center">
+                  <Upload className="text-[#8b7355] mb-4" size={48} />
+                  <p className="text-[#8b7355] mb-4 text-center">
+                    اضغط لرفع صور متعددة للموقع
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleSiteImagesChange}
+                    className="hidden"
+                    id="site-images-upload"
+                  />
+                  <label
+                    htmlFor="site-images-upload"
+                    className="px-6 py-3 bg-gradient-to-r from-[#2c2c2c] to-[#8b7355] text-white rounded-xl cursor-pointer hover:shadow-lg transition-all duration-300 font-medium"
+                  >
+                    اختر صور متعددة
+                  </label>
+                </div>
+              </div>
+
+              {/* New Images Preview */}
+              {newSiteImages.length > 0 && (
+                <div>
+                  <h4 className="text-md font-bold text-[#2c2c2c] mb-3">الصور الجديدة ({newSiteImages.length})</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {newSiteImages.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image.preview}
+                          alt={`New Image ${index + 1}`}
+                          className="w-full h-48 object-cover rounded-lg border-2 border-blue-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeNewSiteImage(index)}
+                          className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                        <div className="absolute bottom-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
+                          جديدة #{index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -338,7 +381,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Save Button */}
-        {(newSiteImage || newLogo) && (
+        {(newSiteImages.length > 0 || newLogo) && (
           <div className="bg-white rounded-2xl shadow-lg border border-[#e8e8c8] p-6">
             <div className="flex items-center justify-between">
               <div>

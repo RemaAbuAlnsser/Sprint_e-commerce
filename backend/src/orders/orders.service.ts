@@ -61,6 +61,43 @@ export class OrdersService {
 
   async create(data: any) {
     try {
+      // فحص توفر الكمية لكل منتج قبل إنشاء الطلب
+      const unavailableProducts: any[] = [];
+      
+      for (const item of data.items) {
+        const checkStockQuery = 'SELECT id, name, stock FROM products WHERE id = ?';
+        const products: any = await this.databaseService.query(checkStockQuery, [item.product_id]);
+        
+        if (products.length === 0) {
+          unavailableProducts.push({
+            name: item.product_name,
+            reason: 'المنتج غير موجود'
+          });
+          continue;
+        }
+        
+        const product = products[0];
+        
+        if (product.stock < item.quantity) {
+          unavailableProducts.push({
+            name: product.name,
+            requestedQty: item.quantity,
+            availableQty: product.stock,
+            reason: product.stock === 0 ? 'غير متوفر' : `الكمية المتوفرة: ${product.stock} فقط`
+          });
+        }
+      }
+      
+      // إذا كان هناك منتجات غير متوفرة، إرجاع رسالة خطأ
+      if (unavailableProducts.length > 0) {
+        return {
+          success: false,
+          message: 'بعض المنتجات غير متوفرة بالكمية المطلوبة',
+          unavailableProducts
+        };
+      }
+      
+      // إنشاء الطلب
       const orderQuery = `
         INSERT INTO orders (
           customer_name, 
@@ -91,6 +128,7 @@ export class OrdersService {
 
       const orderId = orderResult.insertId;
 
+      // إضافة عناصر الطلب وتحديث المخزون
       for (const item of data.items) {
         const itemQuery = `
           INSERT INTO order_items (
@@ -113,6 +151,7 @@ export class OrdersService {
           item.subtotal,
         ]);
 
+        // تحديث المخزون - إنقاص الكمية
         const updateStockQuery = 'UPDATE products SET stock = stock - ? WHERE id = ?';
         await this.databaseService.query(updateStockQuery, [
           item.quantity,
@@ -120,7 +159,7 @@ export class OrdersService {
         ]);
       }
 
-      return { success: true, orderId, message: 'تم إنشاء الطلب بنجاح' };
+      return { success: true, orderId, message: 'تم إنشاء الطلب بنجاح وتحديث المخزون' };
     } catch (error) {
       console.error('Error creating order:', error);
       return { success: false, message: 'فشل إنشاء الطلب', error: error.message };

@@ -63,13 +63,13 @@ export default function CartPage() {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div
-                    key={item.id}
+                    key={`${item.id}-${item.color_name || 'default'}`}
                     className="flex gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
                   >
                     <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      {item.image_url ? (
+                      {(item.color_image_url || item.image_url) ? (
                         <Image
-                          src={`http://localhost:3000${item.image_url}`}
+                          src={`http://localhost:3000${item.color_image_url || item.image_url}`}
                           alt={item.name}
                           width={128}
                           height={128}
@@ -87,6 +87,11 @@ export default function CartPage() {
                         <h3 className="font-bold text-[#2c2c2c] text-lg mb-1">
                           {item.name}
                         </h3>
+                        {item.color_name && (
+                          <p className="text-gray-600 text-sm mb-1">
+                            اللون: {item.color_name}
+                          </p>
+                        )}
                         <p className="text-[#d4af37] font-bold text-xl">
                           {Number(item.price).toFixed(2)} ₪
                         </p>
@@ -95,7 +100,7 @@ export default function CartPage() {
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.color_name)}
                             className="w-8 h-8 rounded-full bg-white hover:bg-[#2c2c2c] hover:text-white transition-colors flex items-center justify-center"
                           >
                             <Minus className="w-4 h-4" />
@@ -104,7 +109,7 @@ export default function CartPage() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.color_name)}
                             className="w-8 h-8 rounded-full bg-white hover:bg-[#2c2c2c] hover:text-white transition-colors flex items-center justify-center"
                           >
                             <Plus className="w-4 h-4" />
@@ -112,7 +117,7 @@ export default function CartPage() {
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.id, item.color_name)}
                           className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full transition-colors"
                         >
                           <Trash2 className="w-5 h-5" />

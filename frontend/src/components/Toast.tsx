@@ -63,7 +63,7 @@ export default function Toast({ message, onClose }: ToastProps) {
   return (
     <div
       ref={toastRef}
-      className="fixed top-24 right-4 md:right-8 z-[100] bg-white shadow-2xl rounded-lg p-4 flex items-center gap-3 min-w-[300px] border-r-4 border-green-500"
+      className="fixed top-24 left-4 md:left-8 z-[100] bg-white shadow-2xl rounded-lg p-4 flex items-center gap-3 min-w-[300px] border-l-4 border-green-500"
     >
       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
         <CheckCircle className="w-6 h-6 text-green-600" />

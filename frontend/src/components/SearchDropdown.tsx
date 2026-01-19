@@ -17,7 +17,7 @@ interface Product {
 interface SearchDropdownProps {
   isOpen: boolean;
   onClose: () => void;
-  buttonRef: React.RefObject<HTMLButtonElement>;
+  buttonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 export default function SearchDropdown({ isOpen, onClose, buttonRef }: SearchDropdownProps) {
@@ -101,25 +101,28 @@ export default function SearchDropdown({ isOpen, onClose, buttonRef }: SearchDro
   return (
     <div
       ref={dropdownRef}
-      className="fixed left-0 right-0 bg-white shadow-lg border-b-2 border-gray-200 z-40"
+      className="fixed left-0 right-0 bg-gradient-to-b from-white via-white to-gray-50/80 shadow-2xl backdrop-blur-xl border-b border-gray-200/50 z-40 animate-in slide-in-from-top duration-300"
       style={{ top: '73px' }}
     >
       <div className="container mx-auto px-4 md:px-6">
         {/* Search Input */}
-        <div className="py-4">
+        <div className="py-6">
           <div className="relative max-w-4xl mx-auto">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#2c2c2c]/5 via-purple-500/5 to-[#2c2c2c]/5 rounded-full blur-xl opacity-50"></div>
             <input
               ref={inputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ابحث عن المنتجات..."
-              className="w-full px-6 py-4 pr-14 text-base border-2 border-gray-300 rounded-full focus:outline-none focus:border-[#2c2c2c] transition-colors"
+              className="relative w-full px-6 py-5 pr-14 text-base border-2 border-gray-200 rounded-full focus:outline-none focus:border-[#2c2c2c] focus:shadow-lg focus:shadow-[#2c2c2c]/10 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:border-gray-300"
             />
-            <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 transition-transform duration-300 hover:scale-110">
+              <Search size={22} className="animate-pulse" />
+            </div>
             <button
               onClick={onClose}
-              className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hover:rotate-90 transition-all duration-300 hover:scale-110"
             >
               <X size={22} />
             </button>
@@ -127,58 +130,66 @@ export default function SearchDropdown({ isOpen, onClose, buttonRef }: SearchDro
         </div>
       </div>
 
-      {/* Results */}
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="max-h-96 overflow-y-auto pb-4">
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-[#2c2c2c]"></div>
-          </div>
-        ) : filteredProducts.length > 0 ? (
-          <div className="py-2">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => handleProductClick(product.name)}
-                className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
-              >
-                <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                  {product.image_url ? (
-                    <Image
-                      src={`http://localhost:3000${product.image_url}`}
-                      alt={product.name}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl">
-                      📦
-                    </div>
-                  )}
+      {/* Results - تظهر فقط عند البحث */}
+      {searchQuery && (
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-h-96 overflow-y-auto pb-6 custom-scrollbar">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-[#2c2c2c] shadow-lg"></div>
+              <p className="mt-3 text-gray-500 text-sm">جاري البحث...</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <div className="py-2 space-y-2">
+              {filteredProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  onClick={() => handleProductClick(product.name)}
+                  className="group flex items-center gap-4 px-5 py-3 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50/30 cursor-pointer transition-all duration-300 rounded-xl border border-transparent hover:border-gray-200/50 hover:shadow-md hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-2"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-50 rounded-lg overflow-hidden flex-shrink-0 shadow-sm group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 ring-2 ring-gray-100 group-hover:ring-[#2c2c2c]/20">
+                    {product.image_url ? (
+                      <Image
+                        src={`http://localhost:3000${product.image_url}`}
+                        alt={product.name}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
+                        📦
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-gray-900 truncate mb-1 group-hover:text-[#2c2c2c] transition-colors">
+                      {product.name}
+                    </h4>
+                    <p className="text-base text-[#d4af37] font-bold flex items-center gap-1">
+                      <span className="text-xs">₪</span>
+                      {Number(product.price).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <svg className="w-5 h-5 text-[#2c2c2c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-base font-semibold text-gray-900 truncate mb-1">
-                    {product.name}
-                  </h4>
-                  <p className="text-base text-[#d4af37] font-bold">
-                    ₪{Number(product.price).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <div className="text-5xl mb-3 opacity-20">🔍</div>
+              <p className="text-gray-500 font-medium text-sm">لا توجد نتائج</p>
+              <p className="text-gray-400 text-xs mt-1">جرب كلمات بحث مختلفة</p>
+            </div>
+          )}
           </div>
-        ) : searchQuery ? (
-          <div className="p-8 text-center text-gray-500">
-            <p className="text-sm">لا توجد نتائج</p>
-          </div>
-        ) : (
-          <div className="p-8 text-center text-gray-500">
-            <p className="text-sm">ابدأ الكتابة للبحث...</p>
-          </div>
-        )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

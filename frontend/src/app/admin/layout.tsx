@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -23,6 +23,11 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isLoginPage = pathname === '/admin';
 
@@ -74,28 +79,31 @@ export default function AdminLayout({
 
         {/* Navigation Menu */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleMenuClick(item)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 ${
-                pathname === item.path
-                  ? 'bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8] text-[#2c2c2c] shadow-md'
-                  : 'text-[#5E4A45] hover:bg-[#f5f5dc]/50 hover:text-[#2c2c2c]'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <item.icon
-                  size={20}
-                  className={pathname === item.path ? 'text-[#2c2c2c]' : 'text-[#5E4A45]'}
-                />
-                <span className="font-medium">{item.label}</span>
-              </div>
-              {pathname === item.path && (
-                <div className="w-2 h-2 bg-[#5E4A45] rounded-full"></div>
-              )}
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = mounted && pathname === item.path;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleMenuClick(item)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8] text-[#2c2c2c] shadow-md'
+                    : 'text-[#5E4A45] hover:bg-[#f5f5dc]/50 hover:text-[#2c2c2c]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon
+                    size={20}
+                    className={isActive ? 'text-[#2c2c2c]' : 'text-[#5E4A45]'}
+                  />
+                  <span className="font-medium">{item.label}</span>
+                </div>
+                {isActive && (
+                  <div className="w-2 h-2 bg-[#5E4A45] rounded-full"></div>
+                )}
+              </button>
+            );
+          })}
         </nav>
 
         {/* User Profile Section */}

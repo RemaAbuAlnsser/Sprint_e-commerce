@@ -11,6 +11,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
+import AdminToast from '@/components/AdminToast';
 
 interface Product {
   id: number;
@@ -18,6 +19,7 @@ interface Product {
   sku?: string;
   description: string;
   price: number;
+  old_price?: number;
   stock: number;
   category_id: number;
   subcategory_id?: number;
@@ -71,8 +73,13 @@ export default function ProductsPage() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [hoverImagePreview, setHoverImagePreview] = useState<string>('');
   const [colorImagePreview, setColorImagePreview] = useState<string>('');
+  const [galleryImages, setGalleryImages] = useState<Array<{url: string; preview: string}>>([]);
+  const [colorGalleryImages, setColorGalleryImages] = useState<Array<{url: string; preview: string}>>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProductForColors, setSelectedProductForColors] = useState<Product | null>(null);
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [showToast, setShowToast] = useState(false);
   const [colorFormData, setColorFormData] = useState({
     color_name: '',
     stock: '',
@@ -84,6 +91,7 @@ export default function ProductsPage() {
     sku: '',
     description: '',
     price: '',
+    old_price: '',
     stock: '',
     category_id: '',
     subcategory_id: '',
@@ -227,6 +235,43 @@ export default function ProductsPage() {
     }
   };
 
+  const handleGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        
+        reader.onloadend = async () => {
+          const preview = reader.result as string;
+          
+          const formDataUpload = new FormData();
+          formDataUpload.append('image', file);
+
+          try {
+            const response = await fetch('http://localhost:3000/upload/product-gallery-image', {
+              method: 'POST',
+              body: formDataUpload,
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              setGalleryImages(prev => [...prev, { url: result.imageUrl, preview }]);
+            }
+          } catch (error) {
+            console.error('Error uploading gallery image:', error);
+          }
+        };
+        
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     setFormData({
@@ -234,6 +279,7 @@ export default function ProductsPage() {
       sku: product.sku || '',
       description: product.description || '',
       price: product.price.toString(),
+      old_price: product.old_price?.toString() || '',
       stock: product.stock.toString(),
       category_id: product.category_id.toString(),
       subcategory_id: product.subcategory_id?.toString() || '',
@@ -288,6 +334,8 @@ export default function ProductsPage() {
       const result = await response.json();
 
       if (result.success) {
+        const productId = editingProduct ? editingProduct.id : result.id;
+        
         // If it's a new product and has temp colors, save them
         if (!editingProduct && tempColors.length > 0 && result.id) {
           for (const color of tempColors) {
@@ -305,21 +353,80 @@ export default function ProductsPage() {
             }
           }
         }
+
+        // If it's an existing product and has new colors, save them
+        if (editingProduct && productColors.length > 0) {
+          for (const color of productColors) {
+            // Only save colors that don't have an ID (new colors)
+            if (!('id' in color) && color.color_name && color.stock > 0) {
+              await fetch('http://localhost:3000/product-colors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  product_id: editingProduct.id,
+                  color_name: color.color_name,
+                  stock: color.stock,
+                  image_url: color.image_url || null,
+                }),
+              });
+            }
+          }
+        }
+
+        // Save gallery images
+        if (galleryImages.length > 0 && productId) {
+          console.log('Saving gallery images for product:', productId);
+          console.log('Gallery images:', galleryImages);
+          
+          for (let i = 0; i < galleryImages.length; i++) {
+            const imageData = {
+              product_id: productId,
+              image_url: galleryImages[i].url,
+              display_order: i,
+            };
+            console.log('Saving image:', imageData);
+            
+            const imageResponse = await fetch('http://localhost:3000/product-images', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(imageData),
+            });
+            
+            const imageResult = await imageResponse.json();
+            console.log('Image save result:', imageResult);
+            
+            if (!imageResult.success) {
+              console.error('Failed to save image:', imageResult);
+            }
+          }
+        } else {
+          console.log('No gallery images to save or no productId');
+          console.log('galleryImages.length:', galleryImages.length);
+          console.log('productId:', productId);
+        }
         
-        alert(editingProduct ? 'تم تحديث المنتج بنجاح!' : 'تم إضافة المنتج بنجاح!');
+        setToastMessage(result.message || (editingProduct ? 'تم تحديث المنتج بنجاح!' : 'تم إضافة المنتج بنجاح!'));
+        setToastType('success');
+        setShowToast(true);
         setIsModalOpen(false);
-        setFormData({ name: '', sku: '', description: '', price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
+        setFormData({ name: '', sku: '', description: '', price: '', old_price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
         setImagePreview('');
         setHoverImagePreview('');
+        setGalleryImages([]);
         setEditingProduct(null);
         setTempColors([]);
+        setProductColors([]);
         fetchProducts();
       } else {
-        alert(editingProduct ? 'فشل في تحديث المنتج' : 'فشل في إضافة المنتج');
+        setToastMessage(result.message || (editingProduct ? 'فشل في تحديث المنتج' : 'فشل في إضافة المنتج'));
+        setToastType('error');
+        setShowToast(true);
       }
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('حدث خطأ أثناء حفظ المنتج');
+      setToastMessage('حدث خطأ أثناء حفظ المنتج');
+      setToastType('error');
+      setShowToast(true);
     } finally {
       setIsLoading(false);
     }
@@ -411,15 +518,39 @@ export default function ProductsPage() {
       const result = await response.json();
 
       if (result.success) {
-        alert('تم إضافة اللون بنجاح!');
+        // Save color gallery images to product_color_images table
+        const colorId = result.id;
+        for (let i = 0; i < colorGalleryImages.length; i++) {
+          try {
+            await fetch('http://localhost:3000/product-color-images', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                product_color_id: colorId,
+                image_url: colorGalleryImages[i].url,
+                display_order: i,
+              }),
+            });
+          } catch (error) {
+            console.error('Error saving color gallery image:', error);
+          }
+        }
+
+        setToastMessage('تم إضافة اللون بنجاح!');
+        setToastType('success');
+        setShowToast(true);
         setColorFormData({ color_name: '', stock: '', image_url: '' });
         setColorImagePreview('');
+        setColorGalleryImages([]);
+        setIsColorModalOpen(false);
         await fetchProductColors(productId);
         await fetchProducts();
       }
     } catch (error) {
       console.error('Error saving color:', error);
-      alert('حدث خطأ أثناء حفظ اللون');
+      setToastMessage('حدث خطأ أثناء حفظ اللون');
+      setToastType('error');
+      setShowToast(true);
     }
   };
 
@@ -469,24 +600,26 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-8" dir="rtl">
+    <div className="p-4 md:p-8" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 md:mb-8 gap-4">
         <div className="text-right">
-          <h1 className="text-3xl font-bold text-[#2c2c2c]">إدارة المنتجات</h1>
-          <p className="text-[#5E4A45] mt-2">إضافة وتعديل المنتجات حسب الفئات</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2c2c2c]">إدارة المنتجات</h1>
+          <p className="text-sm md:text-base text-[#5E4A45] mt-1 md:mt-2">إضافة وتعديل المنتجات حسب الفئات</p>
         </div>
         <button
           onClick={() => {
             setEditingProduct(null);
-            setFormData({ name: '', sku: '', description: '', price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
+            setFormData({ name: '', sku: '', description: '', price: '', old_price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
             setImagePreview('');
             setHoverImagePreview('');
+            setTempColors([]);
+            setProductColors([]);
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2c2c2c] to-[#5E4A45] text-white rounded-xl hover:shadow-lg transition-all duration-300"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-[#2c2c2c] to-[#5E4A45] text-white rounded-xl hover:shadow-lg transition-all duration-300 text-sm md:text-base"
         >
-          <Plus size={20} />
+          <Plus size={18} className="md:w-5 md:h-5" />
           <span>إضافة منتج</span>
         </button>
       </div>
@@ -503,11 +636,11 @@ export default function ProductsPage() {
           return (
             <div key={category.id} className="bg-white rounded-2xl shadow-lg border border-[#e8e8c8] overflow-hidden">
               {/* Category Header */}
-              <div className="bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8] p-6 border-b-2 border-[#5E4A45]/20">
-                <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-[#f5f5dc] to-[#e8e8c8] p-4 md:p-6 border-b-2 border-[#5E4A45]/20">
+                <div className="flex items-center gap-3 md:gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-[#2c2c2c]">{category.name}</h2>
-                    <p className="text-[#5E4A45] text-sm mt-1">
+                    <h2 className="text-lg md:text-2xl font-bold text-[#2c2c2c]">{category.name}</h2>
+                    <p className="text-[#5E4A45] text-xs md:text-sm mt-1">
                       {categoryProducts.length} منتج
                       {categorySubcategories.length > 0 && ` • ${categorySubcategories.length} فئة فرعية`}
                     </p>
@@ -515,31 +648,32 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                 {/* Products without subcategory */}
                 {productsWithoutSubcategory.length > 0 && (
                   <div>
-                    <div className="mb-4">
-                      <h3 className="text-lg font-bold text-[#2c2c2c] mb-1">منتجات عامة</h3>
-                      <p className="text-sm text-[#5E4A45]">{productsWithoutSubcategory.length} منتج</p>
+                    <div className="mb-3 md:mb-4">
+                      <h3 className="text-base md:text-lg font-bold text-[#2c2c2c] mb-1">منتجات عامة</h3>
+                      <p className="text-xs md:text-sm text-[#5E4A45]">{productsWithoutSubcategory.length} منتج</p>
                     </div>
-                    <div className="overflow-x-auto rounded-xl border border-[#e8e8c8]">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto rounded-xl border border-[#e8e8c8]">
                       <table className="w-full border-collapse" dir="rtl">
                         <thead>
                           <tr className="bg-gradient-to-r from-[#f5f5dc]/50 to-[#e8e8c8]/50">
-                            <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[35%]">
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[35%]">
                               المنتج
                             </th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[15%]">
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[15%]">
                               السعر
                             </th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[15%]">
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[15%]">
                               المخزون
                             </th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[15%]">
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[15%]">
                               الحالة
                             </th>
-                            <th className="px-6 py-4 text-center text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[20%]">
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b border-[#e8e8c8] w-[20%]">
                               إجراءات
                             </th>
                           </tr>
@@ -555,9 +689,9 @@ export default function ProductsPage() {
                                 }`}
                               >
                                 {/* Product Info */}
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-lg bg-white shadow-md border-2 border-[#e8e8c8] flex items-center justify-center flex-shrink-0 overflow-hidden group">
+                                <td className="px-3 md:px-6 py-3 md:py-4">
+                                  <div className="flex items-center gap-2 md:gap-4">
+                                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg bg-white shadow-md border-2 border-[#e8e8c8] flex items-center justify-center flex-shrink-0 overflow-hidden group">
                                       {product.image_url ? (
                                         <img
                                           src={`http://localhost:3000${product.image_url}`}
@@ -565,14 +699,14 @@ export default function ProductsPage() {
                                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                         />
                                       ) : (
-                                        <Package size={24} className="text-[#5E4A45] opacity-30" />
+                                        <Package size={20} className="md:w-6 md:h-6 text-[#5E4A45] opacity-30" />
                                       )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="font-bold text-[#2c2c2c] text-sm mb-1 truncate">
+                                      <p className="font-bold text-[#2c2c2c] text-xs md:text-sm mb-1 truncate">
                                         {product.name}
                                       </p>
-                                      <p className="text-xs text-[#5E4A45] line-clamp-1">
+                                      <p className="text-[10px] md:text-xs text-[#5E4A45] line-clamp-1">
                                         {product.description || 'لا يوجد وصف'}
                                       </p>
                                     </div>
@@ -580,22 +714,22 @@ export default function ProductsPage() {
                                 </td>
 
                                 {/* Price */}
-                                <td className="px-6 py-4">
-                                  <span className="text-lg font-bold text-[#2c2c2c]">
+                                <td className="px-3 md:px-6 py-3 md:py-4">
+                                  <span className="text-sm md:text-lg font-bold text-[#2c2c2c]">
                                     ₪{Number(product.price).toFixed(2)}
                                   </span>
                                 </td>
 
                                 {/* Stock */}
-                                <td className="px-6 py-4">
-                                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${stockStatus.color}`}>
+                                <td className="px-3 md:px-6 py-3 md:py-4">
+                                  <span className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold ${stockStatus.color}`}>
                                     {product.stock} {stockStatus.text}
                                   </span>
                                 </td>
 
                                 {/* Status */}
-                                <td className="px-6 py-4">
-                                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                <td className="px-3 md:px-6 py-3 md:py-4">
+                                  <span className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold ${
                                     product.status === 'published' 
                                       ? 'bg-green-100 text-green-800' 
                                       : 'bg-gray-100 text-gray-800'
@@ -605,28 +739,28 @@ export default function ProductsPage() {
                                 </td>
 
                                 {/* Actions */}
-                                <td className="px-6 py-4">
-                                  <div className="flex gap-2 justify-center">
+                                <td className="px-3 md:px-6 py-3 md:py-4">
+                                  <div className="flex gap-1 md:gap-2 justify-center">
                                     <button
                                       onClick={() => handleEdit(product)}
-                                      className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                      className="p-1.5 md:p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                                       title="تعديل"
                                     >
-                                      <Edit size={16} />
+                                      <Edit size={14} className="md:w-4 md:h-4" />
                                     </button>
                                     <button
                                       onClick={() => handleOpenColorModal(product)}
-                                      className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                                      className="p-1.5 md:p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                                       title="إدارة الألوان"
                                     >
-                                      <Package size={16} />
+                                      <Package size={14} className="md:w-4 md:h-4" />
                                     </button>
                                     <button
                                       onClick={() => handleDelete(product.id)}
-                                      className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                      className="p-1.5 md:p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                                       title="حذف"
                                     >
-                                      <Trash2 size={16} />
+                                      <Trash2 size={14} className="md:w-4 md:h-4" />
                                     </button>
                                   </div>
                                 </td>
@@ -635,6 +769,87 @@ export default function ProductsPage() {
                           })}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3">
+                      {productsWithoutSubcategory.map((product, index) => {
+                        const stockStatus = getStockStatus(product.stock);
+                        return (
+                          <div key={product.id} className="bg-white border border-[#e8e8c8] rounded-xl p-4 shadow-sm">
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className="w-16 h-16 rounded-lg bg-white shadow-md border-2 border-[#e8e8c8] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {product.image_url ? (
+                                  <img
+                                    src={`http://localhost:3000${product.image_url}`}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Package size={20} className="text-[#5E4A45] opacity-30" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-[#2c2c2c] text-sm mb-1 line-clamp-2">
+                                  {product.name}
+                                </h4>
+                                <p className="text-xs text-[#5E4A45] line-clamp-2">
+                                  {product.description || 'لا يوجد وصف'}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                              <div>
+                                <span className="text-xs text-gray-500 block">السعر</span>
+                                <span className="text-sm font-bold text-[#2c2c2c]">
+                                  ₪{Number(product.price).toFixed(2)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-500 block">المخزون</span>
+                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${stockStatus.color}`}>
+                                  {product.stock} {stockStatus.text}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                product.status === 'published' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {product.status === 'published' ? 'منشور' : 'مسودة'}
+                              </span>
+                              
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleEdit(product)}
+                                  className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                  title="تعديل"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenColorModal(product)}
+                                  className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                                  title="إدارة الألوان"
+                                >
+                                  <Package size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(product.id)}
+                                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                  title="حذف"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -647,30 +862,31 @@ export default function ProductsPage() {
 
                   return (
                     <div key={subcategory.id}>
-                      <div className="mb-4 flex items-center gap-3">
-                        <div className="w-1 h-8 bg-gradient-to-b from-[#5E4A45] to-[#2c2c2c] rounded-full"></div>
+                      <div className="mb-3 md:mb-4 flex items-center gap-2 md:gap-3">
+                        <div className="w-1 h-6 md:h-8 bg-gradient-to-b from-[#5E4A45] to-[#2c2c2c] rounded-full"></div>
                         <div>
-                          <h3 className="text-lg font-bold text-[#2c2c2c] mb-1">{subcategory.name}</h3>
-                          <p className="text-sm text-[#5E4A45]">{subcategoryProducts.length} منتج</p>
+                          <h3 className="text-base md:text-lg font-bold text-[#2c2c2c] mb-1">{subcategory.name}</h3>
+                          <p className="text-xs md:text-sm text-[#5E4A45]">{subcategoryProducts.length} منتج</p>
                         </div>
                       </div>
-                      <div className="overflow-x-auto rounded-xl border-2 border-[#5E4A45]/20 shadow-md">
+                      {/* Desktop Table View */}
+                      <div className="hidden lg:block overflow-x-auto rounded-xl border-2 border-[#5E4A45]/20 shadow-md">
                         <table className="w-full border-collapse" dir="rtl">
                           <thead>
                             <tr className="bg-gradient-to-r from-[#5E4A45]/10 to-[#2c2c2c]/10">
-                              <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[35%]">
+                              <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[35%]">
                                 المنتج
                               </th>
-                              <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[15%]">
+                              <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[15%]">
                                 السعر
                               </th>
-                              <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[15%]">
+                              <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[15%]">
                                 المخزون
                               </th>
-                              <th className="px-6 py-4 text-right text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[15%]">
+                              <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[15%]">
                                 الحالة
                               </th>
-                              <th className="px-6 py-4 text-center text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[20%]">
+                              <th className="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-bold text-[#2c2c2c] uppercase tracking-wider border-b-2 border-[#5E4A45]/20 w-[20%]">
                                 إجراءات
                               </th>
                             </tr>
@@ -686,9 +902,9 @@ export default function ProductsPage() {
                                   }`}
                                 >
                                   {/* Product Info */}
-                                  <td className="px-6 py-4">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-16 h-16 rounded-lg bg-white shadow-md border-2 border-[#5E4A45]/30 flex items-center justify-center flex-shrink-0 overflow-hidden group">
+                                  <td className="px-3 md:px-6 py-3 md:py-4">
+                                    <div className="flex items-center gap-3 md:gap-4">
+                                      <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg border-2 border-[#5E4A45]/20 flex items-center justify-center flex-shrink-0 overflow-hidden group">
                                         {product.image_url ? (
                                           <img
                                             src={`http://localhost:3000${product.image_url}`}
@@ -696,14 +912,14 @@ export default function ProductsPage() {
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                           />
                                         ) : (
-                                          <Package size={24} className="text-[#5E4A45] opacity-30" />
+                                          <Package size={24} className="md:w-8 md:h-8 text-[#5E4A45] opacity-30" />
                                         )}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-[#2c2c2c] text-sm mb-1 truncate">
+                                        <p className="font-bold text-[#2c2c2c] text-sm md:text-base mb-1.5 leading-tight">
                                           {product.name}
                                         </p>
-                                        <p className="text-xs text-[#5E4A45] line-clamp-1">
+                                        <p className="text-xs md:text-sm text-[#5E4A45]/80 line-clamp-2 leading-relaxed">
                                           {product.description || 'لا يوجد وصف'}
                                         </p>
                                       </div>
@@ -711,22 +927,22 @@ export default function ProductsPage() {
                                   </td>
 
                                   {/* Price */}
-                                  <td className="px-6 py-4">
-                                    <span className="text-lg font-bold text-[#2c2c2c]">
+                                  <td className="px-3 md:px-6 py-3 md:py-4">
+                                    <span className="text-sm md:text-lg font-bold text-[#2c2c2c]">
                                       ₪{Number(product.price).toFixed(2)}
                                     </span>
                                   </td>
 
                                   {/* Stock */}
-                                  <td className="px-6 py-4">
-                                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${stockStatus.color}`}>
+                                  <td className="px-3 md:px-6 py-3 md:py-4">
+                                    <span className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold ${stockStatus.color}`}>
                                       {product.stock} {stockStatus.text}
                                     </span>
                                   </td>
 
                                   {/* Status */}
-                                  <td className="px-6 py-4">
-                                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                  <td className="px-3 md:px-6 py-3 md:py-4">
+                                    <span className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold ${
                                       product.status === 'published' 
                                         ? 'bg-green-100 text-green-800' 
                                         : 'bg-gray-100 text-gray-800'
@@ -736,28 +952,28 @@ export default function ProductsPage() {
                                   </td>
 
                                   {/* Actions */}
-                                  <td className="px-6 py-4">
-                                    <div className="flex gap-2 justify-center">
+                                  <td className="px-3 md:px-6 py-3 md:py-4">
+                                    <div className="flex gap-1 md:gap-2 justify-center">
                                       <button
                                         onClick={() => handleEdit(product)}
-                                        className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                        className="p-1.5 md:p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                                         title="تعديل"
                                       >
-                                        <Edit size={16} />
+                                        <Edit size={14} className="md:w-4 md:h-4" />
                                       </button>
                                       <button
                                         onClick={() => handleOpenColorModal(product)}
-                                        className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                                        className="p-1.5 md:p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                                         title="إدارة الألوان"
                                       >
-                                        <Package size={16} />
+                                        <Package size={14} className="md:w-4 md:h-4" />
                                       </button>
                                       <button
                                         onClick={() => handleDelete(product.id)}
-                                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                        className="p-1.5 md:p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                                         title="حذف"
                                       >
-                                        <Trash2 size={16} />
+                                        <Trash2 size={14} className="md:w-4 md:h-4" />
                                       </button>
                                     </div>
                                   </td>
@@ -766,6 +982,87 @@ export default function ProductsPage() {
                             })}
                           </tbody>
                         </table>
+                      </div>
+
+                      {/* Mobile Card View */}
+                      <div className="lg:hidden space-y-3">
+                        {subcategoryProducts.map((product, index) => {
+                          const stockStatus = getStockStatus(product.stock);
+                          return (
+                            <div key={product.id} className="bg-white border-2 border-[#5E4A45]/20 rounded-xl p-4 shadow-sm">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 shadow-md border-2 border-[#5E4A45]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                  {product.image_url ? (
+                                    <img
+                                      src={`http://localhost:3000${product.image_url}`}
+                                      alt={product.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Package size={20} className="text-[#5E4A45] opacity-30" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-[#2c2c2c] text-sm mb-1 line-clamp-2">
+                                    {product.name}
+                                  </h4>
+                                  <p className="text-xs text-[#5E4A45] line-clamp-2">
+                                    {product.description || 'لا يوجد وصف'}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                  <span className="text-xs text-gray-500 block">السعر</span>
+                                  <span className="text-sm font-bold text-[#2c2c2c]">
+                                    ₪{Number(product.price).toFixed(2)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-gray-500 block">المخزون</span>
+                                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${stockStatus.color}`}>
+                                    {product.stock} {stockStatus.text}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                  product.status === 'published' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {product.status === 'published' ? 'منشور' : 'مسودة'}
+                                </span>
+                                
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleEdit(product)}
+                                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                    title="تعديل"
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenColorModal(product)}
+                                    className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                                    title="إدارة الألوان"
+                                  >
+                                    <Package size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(product.id)}
+                                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                    title="حذف"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -797,7 +1094,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => {
                   setIsModalOpen(false);
-                  setFormData({ name: '', sku: '', description: '', price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
+                  setFormData({ name: '', sku: '', description: '', price: '', old_price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
                   setImagePreview('');
                   setHoverImagePreview('');
                   setEditingProduct(null);
@@ -902,6 +1199,58 @@ export default function ProductsPage() {
                 </div>
               </div>
 
+              {/* Gallery Images Upload */}
+              <div>
+                <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                  الصور الفرعية للمنتج (اختياري)
+                  <span className="text-xs text-[#5E4A45] mr-2">يمكنك رفع عدة صور للمنتج</span>
+                </label>
+                <div className="border-2 border-dashed border-[#e8e8c8] rounded-xl p-6 hover:border-[#5E4A45] transition-colors">
+                  <div className="text-center mb-4">
+                    <Upload className="mx-auto text-[#5E4A45] mb-2" size={48} />
+                    <p className="text-[#5E4A45] mb-2">اضغط لرفع صور إضافية</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleGalleryImageChange}
+                      className="hidden"
+                      id="gallery-images-upload"
+                    />
+                    <label
+                      htmlFor="gallery-images-upload"
+                      className="inline-block px-4 py-2 bg-[#f5f5dc] text-[#2c2c2c] rounded-lg cursor-pointer hover:bg-[#e8e8c8] transition-colors"
+                    >
+                      اختر صور متعددة
+                    </label>
+                  </div>
+                  
+                  {galleryImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      {galleryImages.map((image, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={image.preview}
+                            alt={`Gallery ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeGalleryImage(index)}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                          >
+                            <X size={14} />
+                          </button>
+                          <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Product Name */}
                 <div>
@@ -921,16 +1270,18 @@ export default function ProductsPage() {
                 {/* SKU */}
                 <div>
                   <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                    المعرف (SKU)
-                    <span className="text-xs text-[#5E4A45] mr-2">لمنع تكرار المنتج</span>
+                    المعرف (SKU) *
+                    <span className="text-xs text-[#5E4A45] mr-2">لمنع تكرار المنتج واستخدامه في الروابط</span>
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] transition-colors"
-                    placeholder="مثال: PROD-001"
+                    placeholder="مثال: bag-rolec"
                   />
+                  <p className="text-xs text-gray-500 mt-1">سيتم استخدام SKU في رابط المنتج: /product/bag-rolec</p>
                 </div>
 
                 {/* Category */}
@@ -994,16 +1345,37 @@ export default function ProductsPage() {
                   />
                 </div>
 
+                {/* Old Price */}
+                <div>
+                  <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                    السعر قبل الخصم ($) <span className="text-gray-500 text-xs">(اختياري)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.old_price}
+                    onChange={(e) => setFormData({ ...formData, old_price: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] transition-colors"
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">السعر القديم سيظهر مشطوب مع نسبة الخصم</p>
+                </div>
+
                 {/* Stock */}
                 <div>
                   <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
                     المخزون *
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     required
                     value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      setFormData({ ...formData, stock: value });
+                    }}
                     className="w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] transition-colors"
                     placeholder="0"
                   />
@@ -1103,24 +1475,34 @@ export default function ProductsPage() {
                     <div key={index} className="space-y-2">
                       <div className="grid grid-cols-12 gap-3 items-center">
                         <div className="col-span-4">
-                          {editingProduct ? (
+                          {editingProduct && 'id' in color ? (
                             <input
                               type="text"
                               value={color.color_name}
                               readOnly
-                              className="w-full px-4 py-3 bg-white border-2 border-[#e8e8c8] rounded-xl focus:outline-none text-center text-[#2c2c2c]"
+                              className="w-full px-4 py-3 bg-gray-100 border-2 border-[#e8e8c8] rounded-xl focus:outline-none text-center text-[#2c2c2c]"
                             />
                           ) : (
                             <select
                               value={color.color_name}
                               onChange={(e) => {
-                                const newColors = [...tempColors];
-                                if (e.target.value === '__custom__') {
-                                  newColors[index].color_name = '';
+                                if (editingProduct) {
+                                  const newColors = [...productColors];
+                                  if (e.target.value === '__custom__') {
+                                    newColors[index].color_name = '';
+                                  } else {
+                                    newColors[index].color_name = e.target.value;
+                                  }
+                                  setProductColors(newColors);
                                 } else {
-                                  newColors[index].color_name = e.target.value;
+                                  const newColors = [...tempColors];
+                                  if (e.target.value === '__custom__') {
+                                    newColors[index].color_name = '';
+                                  } else {
+                                    newColors[index].color_name = e.target.value;
+                                  }
+                                  setTempColors(newColors);
                                 }
-                                setTempColors(newColors);
                               }}
                               className="w-full px-4 py-3 bg-white border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] text-center text-[#2c2c2c]"
                             >
@@ -1131,14 +1513,20 @@ export default function ProductsPage() {
                               <option value="__custom__">+ لون جديد (اكتب بنفسك)</option>
                             </select>
                           )}
-                          {!editingProduct && color.color_name === '' && (
+                          {((editingProduct && !('id' in color)) || (!editingProduct)) && color.color_name === '' && (
                             <input
                               type="text"
                               value={color.color_name}
                               onChange={(e) => {
-                                const newColors = [...tempColors];
-                                newColors[index].color_name = e.target.value;
-                                setTempColors(newColors);
+                                if (editingProduct) {
+                                  const newColors = [...productColors];
+                                  newColors[index].color_name = e.target.value;
+                                  setProductColors(newColors);
+                                } else {
+                                  const newColors = [...tempColors];
+                                  newColors[index].color_name = e.target.value;
+                                  setTempColors(newColors);
+                                }
                               }}
                               className="w-full px-4 py-3 bg-white border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] text-center text-[#2c2c2c] mt-2"
                               placeholder="اكتب اسم اللون الجديد"
@@ -1150,15 +1538,21 @@ export default function ProductsPage() {
                           <input
                             type="number"
                             value={color.stock}
-                            readOnly={editingProduct ? true : false}
+                            readOnly={editingProduct && 'id' in color ? true : false}
                             onChange={(e) => {
-                              if (!editingProduct) {
+                              if (editingProduct && !('id' in color)) {
+                                const newColors = [...productColors];
+                                newColors[index].stock = parseInt(e.target.value) || 0;
+                                setProductColors(newColors);
+                              } else if (!editingProduct) {
                                 const newColors = [...tempColors];
                                 newColors[index].stock = parseInt(e.target.value) || 0;
                                 setTempColors(newColors);
                               }
                             }}
-                            className="w-full px-4 py-3 bg-white border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] text-center text-[#2c2c2c]"
+                            className={`w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] text-center text-[#2c2c2c] ${
+                              editingProduct && 'id' in color ? 'bg-gray-100' : 'bg-white'
+                            }`}
                             placeholder="0"
                           />
                         </div>
@@ -1173,7 +1567,7 @@ export default function ProductsPage() {
                               accept="image/*"
                               onChange={async (e) => {
                                 const file = e.target.files?.[0];
-                                if (file && !editingProduct) {
+                                if (file && (!editingProduct || !('id' in color))) {
                                   const formDataUpload = new FormData();
                                   formDataUpload.append('image', file);
                                   
@@ -1185,9 +1579,15 @@ export default function ProductsPage() {
                                     
                                     const result = await response.json();
                                     if (result.success) {
-                                      const newColors = [...tempColors];
-                                      newColors[index].image_url = result.imageUrl;
-                                      setTempColors(newColors);
+                                      if (editingProduct) {
+                                        const newColors = [...productColors];
+                                        newColors[index].image_url = result.imageUrl;
+                                        setProductColors(newColors);
+                                      } else {
+                                        const newColors = [...tempColors];
+                                        newColors[index].image_url = result.imageUrl;
+                                        setTempColors(newColors);
+                                      }
                                     }
                                   } catch (error) {
                                     console.error('Error uploading color image:', error);
@@ -1204,6 +1604,8 @@ export default function ProductsPage() {
                             onClick={() => {
                               if (editingProduct && 'id' in color && typeof color.id === 'number') {
                                 handleDeleteColor(color.id);
+                              } else if (editingProduct) {
+                                setProductColors(productColors.filter((_, i) => i !== index));
                               } else {
                                 setTempColors(tempColors.filter((_, i) => i !== index));
                               }
@@ -1246,14 +1648,10 @@ export default function ProductsPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      // For both new products and editing, add to temp/current array
                       if (editingProduct) {
-                        // For existing products, show a simple prompt
-                        const colorName = prompt('اسم اللون:');
-                        const stock = prompt('الكمية:');
-                        if (colorName && stock) {
-                          setColorFormData({ color_name: colorName, stock: stock, image_url: '' });
-                          handleSaveColor();
-                        }
+                        // Add empty color to productColors for editing
+                        setProductColors([...productColors, { color_name: '', stock: 0 }]);
                       } else {
                         // For new products, add to temp array
                         setTempColors([...tempColors, { color_name: '', stock: 0 }]);
@@ -1273,11 +1671,12 @@ export default function ProductsPage() {
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
-                    setFormData({ name: '', sku: '', description: '', price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
+                    setFormData({ name: '', sku: '', description: '', price: '', old_price: '', stock: '', category_id: '', subcategory_id: '', company_id: '', image_url: '', hover_image_url: '', status: 'published', is_featured: false, is_exclusive: false });
                     setImagePreview('');
                     setHoverImagePreview('');
                     setEditingProduct(null);
                     setTempColors([]);
+                    setProductColors([]);
                   }}
                   className="flex-1 px-6 py-3 border-2 border-[#e8e8c8] text-[#2c2c2c] rounded-xl hover:bg-[#f5f5dc] transition-colors"
                 >
@@ -1329,14 +1728,29 @@ export default function ProductsPage() {
                       <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
                         اسم اللون *
                       </label>
-                      <input
-                        type="text"
-                        required
+                      <select
                         value={colorFormData.color_name}
                         onChange={(e) => setColorFormData({ ...colorFormData, color_name: e.target.value })}
                         className="w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] transition-colors"
-                        placeholder="مثال: أحمر، أزرق، أسود"
-                      />
+                      >
+                        <option value="">اختر لون من القائمة</option>
+                        {availableColors.map((color, index) => (
+                          <option key={index} value={color}>
+                            {color}
+                          </option>
+                        ))}
+                        <option value="__new__">+ إضافة لون جديد</option>
+                      </select>
+                      
+                      {colorFormData.color_name === '__new__' && (
+                        <input
+                          type="text"
+                          placeholder="اكتب اسم اللون الجديد"
+                          className="w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] transition-colors mt-3"
+                          onChange={(e) => setColorFormData({ ...colorFormData, color_name: e.target.value === '' ? '__new__' : e.target.value })}
+                          autoFocus
+                        />
+                      )}
                     </div>
 
                     {/* Stock */}
@@ -1358,7 +1772,7 @@ export default function ProductsPage() {
                   {/* Color Image Upload */}
                   <div>
                     <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                      صورة المنتج باللون
+                      صورة المنتج باللون الرئيسية
                     </label>
                     <div className="border-2 border-dashed border-[#e8e8c8] rounded-xl p-4 text-center hover:border-[#5E4A45] transition-colors">
                       {colorImagePreview ? (
@@ -1390,6 +1804,77 @@ export default function ProductsPage() {
                             className="hidden"
                           />
                         </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Color Gallery Images */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                      الصور الفرعية للون (اختياري)
+                    </label>
+                    <div className="border-2 border-dashed border-[#e8e8c8] rounded-xl p-4 hover:border-[#5E4A45] transition-colors">
+                      <label className="cursor-pointer block text-center">
+                        <Upload className="mx-auto text-[#5E4A45] mb-2" size={32} />
+                        <p className="text-[#5E4A45] text-sm mb-1">اضغط لرفع صور فرعية للون</p>
+                        <p className="text-gray-500 text-xs">يمكنك رفع عدة صور</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files || []);
+                            const newImages = [];
+                            
+                            for (const file of files) {
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              
+                              try {
+                                const response = await fetch('http://localhost:3000/upload/product-gallery-image', {
+                                  method: 'POST',
+                                  body: formData,
+                                });
+                                
+                                const result = await response.json();
+                                if (result.success) {
+                                  newImages.push({
+                                    url: result.imageUrl,
+                                    preview: `http://localhost:3000${result.imageUrl}`
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('Error uploading image:', error);
+                              }
+                            }
+                            
+                            setColorGalleryImages([...colorGalleryImages, ...newImages]);
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                      
+                      {colorGalleryImages.length > 0 && (
+                        <div className="grid grid-cols-3 gap-3 mt-4">
+                          {colorGalleryImages.map((img, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={img.preview}
+                                alt={`Gallery ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setColorGalleryImages(colorGalleryImages.filter((_, i) => i !== index));
+                                }}
+                                className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1459,6 +1944,15 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <AdminToast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
       )}
     </div>
   );

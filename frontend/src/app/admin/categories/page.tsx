@@ -315,18 +315,18 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="p-8" dir="rtl">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 md:mb-8 gap-4">
         <div className="text-right">
-          <h1 className="text-3xl font-bold text-[#2c2c2c]">إدارة الفئات</h1>
-          <p className="text-[#5E4A45] mt-2">إضافة وتعديل فئات المنتجات</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2c2c2c]">إدارة الفئات</h1>
+          <p className="text-sm md:text-base text-[#5E4A45] mt-1 md:mt-2">إضافة وتعديل الفئات والفئات الفرعية</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2c2c2c] to-[#5E4A45] text-white rounded-xl hover:shadow-lg transition-all duration-300"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-[#2c2c2c] to-[#5E4A45] text-white rounded-xl hover:shadow-lg transition-all duration-300 text-sm md:text-base"
         >
-          <Plus size={20} />
+          <Plus size={18} className="md:w-5 md:h-5" />
           <span>إضافة فئة</span>
         </button>
       </div>
@@ -336,10 +336,10 @@ export default function CategoriesPage() {
         {categories.map((category) => (
           <div key={category.id} className="bg-white rounded-xl shadow-md border-2 border-[#f5f5dc] overflow-hidden">
             {/* Main Category */}
-            <div className="p-6">
-              <div className="flex items-center gap-4">
+            <div className="p-4 md:p-6">
+              <div className="flex items-center gap-3 md:gap-4">
                 {/* Category Image */}
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-lg bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] flex items-center justify-center flex-shrink-0">
                   {category.image_url ? (
                     <img
                       src={`http://localhost:3000${category.image_url}`}
@@ -352,51 +352,55 @@ export default function CategoriesPage() {
                 </div>
 
                 {/* Category Info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-bold text-[#2c2c2c]">{category.name}</h3>
-                    <span className="text-xs text-[#5E4A45] bg-[#f5f5dc] px-3 py-1 rounded-full">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2">
+                    <h3 className="text-base md:text-xl font-bold text-[#2c2c2c] truncate">{category.name}</h3>
+                    <span className="text-[10px] md:text-xs text-[#5E4A45] bg-[#f5f5dc] px-2 md:px-3 py-1 rounded-full whitespace-nowrap">
                       #{category.id}
                     </span>
                   </div>
-                  <p className="text-sm text-[#5E4A45] mb-3">{category.description || 'لا يوجد وصف'}</p>
+                  <p className="text-xs md:text-sm text-[#5E4A45] mb-3 line-clamp-2">{category.description || 'لا يوجد وصف'}</p>
                   
                   {/* Category Actions */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#f5f5dc] text-[#2c2c2c] rounded-lg hover:bg-[#e8e8c8] transition-colors"
+                      className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-[#f5f5dc] text-[#2c2c2c] rounded-lg hover:bg-[#e8e8c8] transition-colors text-xs md:text-sm"
                     >
                       {expandedCategories.has(category.id) ? (
-                        <ChevronUp size={16} />
+                        <ChevronUp size={14} className="md:w-4 md:h-4" />
                       ) : (
-                        <ChevronDown size={16} />
+                        <ChevronDown size={14} className="md:w-4 md:h-4" />
                       )}
-                      <span className="text-sm">
+                      <span className="hidden sm:inline">
                         {expandedCategories.has(category.id) ? 'إخفاء' : 'عرض'} الفئات الفرعية
                         {subcategories[category.id] && ` (${subcategories[category.id].length})`}
+                      </span>
+                      <span className="sm:hidden">
+                        {expandedCategories.has(category.id) ? 'إخفاء' : 'عرض'}
                       </span>
                     </button>
                     <button
                       onClick={() => handleAddSubcategory(category.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                      className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-xs md:text-sm"
                     >
-                      <Plus size={16} />
-                      <span className="text-sm">إضافة فئة فرعية</span>
+                      <Plus size={14} className="md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">إضافة فئة فرعية</span>
+                      <span className="sm:hidden">إضافة</span>
                     </button>
                     <button
                       onClick={() => handleEdit(category)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-xs md:text-sm"
                     >
-                      <Edit size={16} />
-                      <span className="text-sm">تعديل</span>
+                      <Edit size={14} className="md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">تعديل</span>
                     </button>
                     <button
                       onClick={() => handleDelete(category.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                      className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-xs md:text-sm"
                     >
-                      <Trash2 size={16} />
-                      <span className="text-sm">حذف</span>
+                      <Trash2 size={14} className="md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">حذف</span>
                     </button>
                   </div>
                 </div>

@@ -12,6 +12,8 @@ import { CompaniesModule } from './companies/companies.module';
 import { SubcategoriesModule } from './subcategories/subcategories.module';
 import { SettingsModule } from './settings/settings.module';
 import { ProductColorsModule } from './product-colors/product-colors.module';
+import { ProductImagesModule } from './product-images/product-images.module';
+import { ProductColorImagesModule } from './product-color-images/product-color-images.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { ProductColorsModule } from './product-colors/product-colors.module';
     SubcategoriesModule,
     SettingsModule,
     ProductColorsModule,
+    ProductImagesModule,
+    ProductColorImagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

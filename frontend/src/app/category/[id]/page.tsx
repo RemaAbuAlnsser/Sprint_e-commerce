@@ -7,13 +7,16 @@ import { ArrowRight, ShoppingCart, Eye } from 'lucide-react';
 import Header from '@/components/Header';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
+import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
 import Toast from '@/components/Toast';
 
 interface Product {
   id: number;
   name: string;
+  sku?: string;
   description?: string;
   price: number;
+  old_price?: number;
   image_url?: string;
   hover_image_url?: string;
   category_name: string;
@@ -37,6 +40,7 @@ export default function CategoryPage() {
   const gridRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { addToCart } = useCart();
+  const { isAnimating, createFlyingAnimation } = useFlyingAnimation();
 
   useEffect(() => {
     const fetchCategoryAndProducts = async () => {
@@ -70,85 +74,20 @@ export default function CategoryPage() {
     fetchCategoryAndProducts();
   }, [params.id]);
 
-  const handleAddToCart = useCallback((product: Product, buttonRef: HTMLButtonElement) => {
-    const productCard = buttonRef.closest('.product-card');
-    const productImage = productCard?.querySelector('img');
-    
-    if (productImage) {
-      const clone = productImage.cloneNode(true) as HTMLElement;
-      clone.style.position = 'fixed';
-      clone.style.zIndex = '1000';
-      clone.style.width = '80px';
-      clone.style.height = '80px';
-      clone.style.borderRadius = '8px';
-      clone.style.pointerEvents = 'none';
+  const handleAddToCart = useCallback(async (product: Product, buttonRef: HTMLButtonElement) => {
+    createFlyingAnimation(buttonRef, product, async () => {
+      const result = await addToCart({ id: product.id, name: product.name, price: Number(product.price), image_url: product.image_url });
       
-      const rect = productImage.getBoundingClientRect();
-      clone.style.left = `${rect.left}px`;
-      clone.style.top = `${rect.top}px`;
-      
-      document.body.appendChild(clone);
-      
-      const cartIcon = document.querySelector('[aria-label="Cart"]');
-      const cartRect = cartIcon?.getBoundingClientRect();
-      
-      if (cartRect) {
-        gsap.to(clone, {
-          left: `${cartRect.left + cartRect.width / 2 - 10}px`,
-          top: `${cartRect.top + cartRect.height / 2 - 10}px`,
-          width: 20,
-          height: 20,
-          opacity: 0,
-          duration: 0.8,
-          ease: 'power1.inOut',
-          onComplete: () => {
-            clone.remove();
-            
-            if (cartIcon) {
-              gsap.fromTo(
-                cartIcon,
-                { scale: 1 },
-                {
-                  scale: 1.3,
-                  duration: 0.2,
-                  yoyo: true,
-                  repeat: 1,
-                  ease: 'power2.inOut',
-                }
-              );
-            }
-          },
-        });
+      if (!result.success) {
+        setToastMessage(result.message || 'فشل إضافة المنتج');
+        setShowToast(true);
+        return;
       }
-    }
-    
-    addToCart({ id: product.id, name: product.name, price: Number(product.price), image_url: product.image_url });
-    
-    gsap.to(buttonRef, {
-      scale: 0.9,
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1,
-      ease: 'power2.inOut',
+      
+      setToastMessage(`تمت إضافة "${product.name}" إلى السلة`);
+      setShowToast(true);
     });
-
-    const icon = buttonRef.querySelector('svg');
-    if (icon) {
-      gsap.fromTo(
-        icon,
-        { rotation: 0, scale: 1 },
-        {
-          rotation: 360,
-          scale: 1.3,
-          duration: 0.6,
-          ease: 'back.out(1.7)',
-        }
-      );
-    }
-
-    setToastMessage(`تمت إضافة "${product.name}" إلى السلة`);
-    setShowToast(true);
-  }, [addToCart]);
+  }, [addToCart, createFlyingAnimation]);
 
   useEffect(() => {
     if (!loading && category && products.length > 0 && gridRef.current) {
@@ -247,21 +186,27 @@ export default function CategoryPage() {
                   key={product.id}
                   className="product-card group"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-3">
+                  <div 
+                    onClick={() => {
+                      const slug = product.sku || encodeURIComponent(product.name);
+                      router.push(`/product/${slug}`);
+                    }}
+                    className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-3 cursor-pointer"
+                  >
                     {product.image_url ? (
                       <>
                         <Image
                           src={`http://localhost:3000${product.image_url}`}
                           alt={product.name}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                         />
                         {product.hover_image_url && (
                           <Image
                             src={`http://localhost:3000${product.hover_image_url}`}
                             alt={product.name}
                             fill
-                            className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}
                           />
                         )}
                       </>
@@ -271,32 +216,67 @@ export default function CategoryPage() {
                       </div>
                     )}
 
-                    {product.stock <= 0 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm">
-                          نفذت الكمية
+                    {product.stock === 0 && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                          غير متوفر
                         </span>
+                      </div>
+                    )}
+
+                    {/* Sale Badge */}
+                    {product.old_price && Number(product.old_price) > Number(product.price) && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg font-bold text-xs md:text-sm shadow-lg">
+                        SALE
                       </div>
                     )}
                   </div>
 
-                  <div className="text-right">
-                    <h3 className="text-sm font-medium text-gray-800 mb-2 line-clamp-2">
+                  <div className="text-center">
+                    <h3 
+                      onClick={() => {
+                        const slug = product.sku || encodeURIComponent(product.name);
+                        router.push(`/product/${slug}`);
+                      }}
+                      className="text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
+                    >
                       {product.name}
                     </h3>
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="mb-4">
+                      {product.old_price && product.old_price > product.price ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-400 line-through">
+                              ₪{Number(product.old_price).toFixed(2)}
+                            </span>
+                            <span className="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-md font-bold">
+                              -{Math.round(((product.old_price - product.price) / product.old_price) * 100)}%
+                            </span>
+                          </div>
+                          <span className="text-lg md:text-xl font-bold text-[#d4af37]">
+                            ₪{Number(product.price).toFixed(2)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-lg md:text-xl font-bold text-[#2c2c2c]">
+                          ₪{Number(product.price).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    {product.stock === 0 ? (
+                      <div className="w-full px-3 py-3 bg-gray-300 text-gray-500 rounded-lg font-medium text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>غير متوفر</span>
+                      </div>
+                    ) : (
                       <button
                         onClick={(e) => handleAddToCart(product, e.currentTarget)}
-                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={product.stock <= 0}
+                        className="w-full px-3 py-3 bg-[#2c2c2c] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium text-sm flex items-center justify-center gap-2"
                       >
-                        <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
-                        <span className="hidden sm:inline">أضف للسلة</span>
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>أضف للسلة</span>
                       </button>
-                      <span className="text-base md:text-xl font-bold text-[#2c2c2c] whitespace-nowrap">
-                        {Number(product.price).toFixed(2)} ₪
-                      </span>
-                    </div>
+                    )}
                   </div>
                 </div>
               ))}
