@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
+import NewLabel from '@/components/NewLabel';
+import { isProductNew } from '@/utils/dateUtils';
 import Toast from './Toast';
 
 if (typeof window !== 'undefined') {
@@ -25,6 +27,7 @@ interface Product {
   image_url?: string;
   hover_image_url?: string;
   category_name: string;
+  created_at: string;
 }
 
 interface CategorySectionProps {
@@ -256,6 +259,13 @@ export default function CategorySection({ category, index }: CategorySectionProp
                     <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg font-bold text-xs md:text-sm shadow-lg">
                       SALE
                     </div>
+                  )}
+
+                  {/* New Label - positioned below SALE if it exists */}
+                  {isProductNew(product.created_at) && (
+                    <NewLabel 
+                      className={product.old_price && Number(product.old_price) > Number(product.price) ? "top-12" : ""}
+                    />
                   )}
                 </div>
 

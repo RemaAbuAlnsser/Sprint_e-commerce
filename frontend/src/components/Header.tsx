@@ -178,6 +178,19 @@ export default function Header() {
               الرئيسية
               <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
             </a>
+
+            <a
+              onClick={() => router.push('/new')}
+              className="text-[#2c2c2c] hover:text-red-500 transition-colors font-medium text-sm relative group cursor-pointer flex items-center gap-1"
+              onMouseEnter={handleHover}
+              onMouseLeave={handleHoverOut}
+            >
+              <span className="bg-gradient-to-r from-red-500 to-red-600 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">
+                جديد
+              </span>
+              المنتجات الجديدة
+              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-red-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
             
             <div ref={categoriesRef} className="relative">
               <button

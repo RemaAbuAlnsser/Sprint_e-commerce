@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
+import NewLabel from '@/components/NewLabel';
+import { isProductNew } from '@/utils/dateUtils';
 import Toast from '@/components/Toast';
 
 interface Product {
@@ -21,6 +23,7 @@ interface Product {
   hover_image_url?: string;
   category_name: string;
   stock: number;
+  created_at: string;
 }
 
 export default function DealsPage() {
@@ -223,6 +226,13 @@ export default function DealsPage() {
                       <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg font-bold text-xs md:text-sm shadow-lg">
                         -{Math.round(((Number(product.old_price) - Number(product.price)) / Number(product.old_price)) * 100)}%
                       </div>
+                    )}
+
+                    {/* New Label - positioned below SALE if it exists */}
+                    {isProductNew(product.created_at) && (
+                      <NewLabel 
+                        className={product.old_price && Number(product.old_price) > Number(product.price) ? "top-12" : ""}
+                      />
                     )}
                   </div>
 

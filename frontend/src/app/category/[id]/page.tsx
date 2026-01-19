@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
+import NewLabel from '@/components/NewLabel';
+import { isProductNew } from '@/utils/dateUtils';
 import Toast from '@/components/Toast';
 
 interface Product {
@@ -22,6 +24,7 @@ interface Product {
   category_name: string;
   stock: number;
   company_id?: number;
+  created_at: string;
 }
 
 interface Category {
@@ -320,6 +323,13 @@ export default function CategoryPage() {
                       <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg font-bold text-xs md:text-sm shadow-lg">
                         SALE
                       </div>
+                    )}
+
+                    {/* New Label - positioned below SALE if it exists */}
+                    {isProductNew(product.created_at) && (
+                      <NewLabel 
+                        className={product.old_price && Number(product.old_price) > Number(product.price) ? "top-12" : ""}
+                      />
                     )}
                   </div>
 

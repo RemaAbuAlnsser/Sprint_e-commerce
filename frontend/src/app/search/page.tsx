@@ -7,15 +7,19 @@ import Image from 'next/image';
 import { Search, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
+import NewLabel from '@/components/NewLabel';
+import { isProductNew } from '@/utils/dateUtils';
 
 interface Product {
   id: number;
   name: string;
   description: string;
   price: number;
+  old_price?: number;
   image_url: string;
   hover_image_url?: string;
   category_id: number;
+  created_at: string;
 }
 
 export default function SearchPage() {
@@ -138,7 +142,7 @@ export default function SearchPage() {
                 key={product.id}
                 className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 group"
               >
-                <div className="relative h-64 overflow-hidden bg-gray-100">
+                <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-4">
                   {product.image_url ? (
                     <>
                       <Image
@@ -160,6 +164,20 @@ export default function SearchPage() {
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="text-6xl opacity-20">📦</span>
                     </div>
+                  )}
+                  
+                  {/* Sale Badge */}
+                  {product.old_price && Number(product.old_price) > Number(product.price) && (
+                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg font-bold text-xs md:text-sm shadow-lg">
+                      SALE
+                    </div>
+                  )}
+                  
+                  {/* New Label - positioned below SALE if it exists */}
+                  {isProductNew(product.created_at) && (
+                    <NewLabel 
+                      className={product.old_price && Number(product.old_price) > Number(product.price) ? "top-12" : ""}
+                    />
                   )}
                 </div>
 
