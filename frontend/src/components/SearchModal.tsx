@@ -14,6 +14,7 @@ interface Product {
   price: number;
   image_url: string;
   hover_image_url?: string;
+  sku: string;
 }
 
 interface SearchModalProps {
@@ -179,7 +180,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 >
                   <div 
                     onClick={() => {
-                      router.push(`/product/${encodeURIComponent(product.name)}`);
+                      router.push(`/product/${product.sku}`);
                       handleClose();
                     }}
                     className="relative h-48 overflow-hidden bg-gray-100"
@@ -201,7 +202,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   <div className="p-3 text-center">
                     <h3 
                       onClick={() => {
-                        router.push(`/product/${encodeURIComponent(product.name)}`);
+                        router.push(`/product/${product.sku}`);
                         handleClose();
                       }}
                       className="text-lg font-bold text-[#2c2c2c] mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"

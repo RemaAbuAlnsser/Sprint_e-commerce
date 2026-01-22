@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, memo } from 'react';
 import gsap from 'gsap';
 import { ShoppingCart, Search, Menu, User, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
-import MobileSidebar from './MobileSidebar';
+import MegaMenu from './MegaMenu';
 import SearchDropdown from './SearchDropdown';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ interface Category {
   image_url?: string;
 }
 
-export default function Header() {
+const Header = memo(function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -24,7 +24,7 @@ export default function Header() {
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [siteLogo, setSiteLogo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -157,6 +157,7 @@ export default function Header() {
                   width={48}
                   height={48}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <span className="text-2xl font-bold text-white">S</span>
@@ -282,10 +283,10 @@ export default function Header() {
               )}
             </button>
             <button
-              className="lg:hidden text-[#2c2c2c] p-2 hover:bg-gray-100 rounded-full"
+              className="text-[#2c2c2c] p-2 hover:bg-gray-100 rounded-full"
               onMouseEnter={handleHover}
               onMouseLeave={handleHoverOut}
-              onClick={() => setIsSidebarOpen(true)}
+              onClick={() => setIsMegaMenuOpen(true)}
               aria-label="Menu"
             >
               <Menu size={20} />
@@ -295,7 +296,9 @@ export default function Header() {
       </div>
     </header>
 
-    {isSidebarOpen && <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
+    <MegaMenu isOpen={isMegaMenuOpen} onClose={() => setIsMegaMenuOpen(false)} />
     </>
   );
-}
+});
+
+export default Header;

@@ -18,6 +18,7 @@
   --color-gold: var(--gold);
   --font-sans: var(--font-cairo);
   --font-display: var(--font-tajawal);
+  --font-arabic: var(--font-amiri);
 }
 
 * {
@@ -73,4 +74,57 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Arabic Decorative Styling for Product Cards and Headings */
+.product-name {
+  font-family: var(--font-amiri), var(--font-cairo), sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+  .product-name {
+    font-size: 1.25rem;
+  }
+}
+
+.product-price {
+  font-family: var(--font-amiri), var(--font-cairo), sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+@media (min-width: 768px) {
+  .product-price {
+    font-size: 1.25rem;
+  }
+}
+
+.section-heading {
+  font-family: var(--font-amiri), var(--font-tajawal), sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* منع Layout Shift للصور */
+img {
+  content-visibility: auto;
+}
+
+/* تحسين CLS للعناصر */
+.product-card {
+  contain: layout style paint;
+}
+
+/* تثبيت ارتفاع Footer لمنع Layout Shift */
+footer {
+  min-height: 400px;
+}
+
+@media (min-width: 768px) {
+  footer {
+    min-height: 450px;
+  }
 }

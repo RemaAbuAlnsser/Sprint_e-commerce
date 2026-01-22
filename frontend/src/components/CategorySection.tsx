@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight, ShoppingCart, Eye } from 'lucide-react';
@@ -11,6 +11,7 @@ import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
 import NewLabel from '@/components/NewLabel';
 import { isProductNew } from '@/utils/dateUtils';
 import Toast from './Toast';
+import ProductSkeleton from './ProductSkeleton';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -40,7 +41,7 @@ interface CategorySectionProps {
   index: number;
 }
 
-export default function CategorySection({ category, index }: CategorySectionProps) {
+const CategorySection = memo(function CategorySection({ category, index }: CategorySectionProps) {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,8 @@ export default function CategorySection({ category, index }: CategorySectionProp
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { addToCart } = useCart();
   const { isAnimating, createFlyingAnimation } = useFlyingAnimation();
+  
+  const backgroundColor = useMemo(() => index % 2 === 0 ? 'bg-white' : 'bg-gray-50', [index]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -165,8 +168,6 @@ export default function CategorySection({ category, index }: CategorySectionProp
     return null;
   }
 
-  const backgroundColor = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-
   return (
     <>
       {showToast && <Toast message={toastMessage} onClose={() => setShowToast(false)} />}
@@ -177,7 +178,7 @@ export default function CategorySection({ category, index }: CategorySectionProp
             <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent flex-1 max-w-xs"></div>
             <h2
               ref={titleRef}
-              className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c] text-center"
+              className="section-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c] text-center"
             >
               {category.name}
             </h2>
@@ -211,7 +212,13 @@ export default function CategorySection({ category, index }: CategorySectionProp
           className="grid grid-flow-col auto-cols-[calc(50%-8px)] sm:auto-cols-[calc(50%-8px)] md:auto-cols-[calc(33.333%-10.667px)] lg:auto-cols-[calc(25%-12px)] xl:auto-cols-[calc(20%-12.8px)] gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-6 pt-3 px-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {products.map((product) => (
+          {loading ? (
+            [...Array(5)].map((_, i) => (
+              <div key={i} className="w-full">
+                <ProductSkeleton />
+              </div>
+            ))
+          ) : products.map((product) => (
             <div
               key={product.id}
               className="w-full group"
@@ -219,10 +226,10 @@ export default function CategorySection({ category, index }: CategorySectionProp
               <div className="product-card h-full flex flex-col">
                 <div 
                   onClick={() => {
-                    const slug = product.sku || encodeURIComponent(product.name);
-                    router.push(`/product/${slug}`);
+                    router.push(`/product/${product.sku}`);
                   }}
                   className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 flex-shrink-0 mb-3 cursor-pointer"
+                  style={{ aspectRatio: '1/1', minHeight: '200px' }}
                 >
                   {product.image_url ? (
                     <>
@@ -232,6 +239,7 @@ export default function CategorySection({ category, index }: CategorySectionProp
                         fill
                         unoptimized
                         className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
+                        loading="lazy"
                       />
                       {product.hover_image_url && (
                         <Image
@@ -240,6 +248,7 @@ export default function CategorySection({ category, index }: CategorySectionProp
                           fill
                           unoptimized
                           className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}
+                          loading="lazy"
                         />
                       )}
                     </>
@@ -272,10 +281,9 @@ export default function CategorySection({ category, index }: CategorySectionProp
                 <div className="text-center flex flex-col flex-1">
                   <h3 
                     onClick={() => {
-                      const slug = product.sku || encodeURIComponent(product.name);
-                      router.push(`/product/${slug}`);
+                      router.push(`/product/${product.sku}`);
                     }}
-                    className="text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
+                    className="product-name text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
                   >
                     {product.name}
                   </h3>
@@ -290,12 +298,12 @@ export default function CategorySection({ category, index }: CategorySectionProp
                             -{Math.round(((product.old_price - product.price) / product.old_price) * 100)}%
                           </span>
                         </div>
-                        <span className="text-lg md:text-xl font-bold text-[#d4af37]">
+                        <span className="product-price text-lg md:text-xl font-bold text-[#d4af37]">
                           ₪{Number(product.price).toFixed(2)}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-lg md:text-xl font-bold text-[#2c2c2c]">
+                      <span className="product-price text-lg md:text-xl font-bold text-[#2c2c2c]">
                         ₪{Number(product.price).toFixed(2)}
                       </span>
                     )}
@@ -317,10 +325,13 @@ export default function CategorySection({ category, index }: CategorySectionProp
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          }
         </div>
       </div>
     </section>
     </>
   );
-}
+});
+
+export default CategorySection;

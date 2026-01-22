@@ -6,33 +6,28 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-interface Subcategory {
-  id: number;
-  name: string;
-  image_url?: string;
-  category_id: number;
-}
-
 interface Category {
   id: number;
   name: string;
   description?: string;
   image_url?: string;
-  subcategories: Subcategory[];
 }
 
 export default function CategoriesMenu() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsPerView, setItemsPerView] = useState(2);
+  const [itemsPerView, setItemsPerView] = useState(4);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/categories/with-subcategories');
+        const response = await fetch('http://localhost:3000/categories');
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -47,30 +42,38 @@ export default function CategoriesMenu() {
   }, []);
 
   useEffect(() => {
-    if (!loading && categories.length > 0 && containerRef.current) {
-      gsap.fromTo(
-        containerRef.current.children,
-        { opacity: 0, y: 50, scale: 0.95 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          stagger: {
-            amount: 0.4,
-            ease: 'power2.out',
-          },
-          ease: 'power3.out',
-        }
-      );
+    if (loading || categories.length === 0 || !containerRef.current || hasAnimated.current) {
+      return;
     }
-  }, [loading, categories, currentIndex]);
+
+    hasAnimated.current = true;
+    
+    const ctx = gsap.context(() => {
+      const items = containerRef.current?.children;
+      if (!items || items.length === 0) return;
+
+      gsap.set(items, { opacity: 0, y: 30, scale: 0.9 });
+      
+      gsap.to(items, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: 'power2.out',
+        delay: 0.1,
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [loading, categories]);
 
   const getItemsPerView = useCallback(() => {
-    if (typeof window === 'undefined') return 2;
-    if (window.innerWidth < 768) return 2;
-    if (window.innerWidth < 1024) return 3;
-    return 4;
+    if (typeof window === 'undefined') return 4;
+    if (window.innerWidth < 640) return 4;
+    if (window.innerWidth < 768) return 4;
+    if (window.innerWidth < 1024) return 5;
+    return 7;
   }, []);
 
   useEffect(() => {
@@ -94,18 +97,53 @@ export default function CategoriesMenu() {
     });
   }, [maxIndex]);
 
-  const handleSubcategoryClick = (subcategoryId: number) => {
-    router.push('/subcategory/' + subcategoryId);
+  const handleCategoryClick = (categoryId: number) => {
+    router.push('/category/' + categoryId);
   };
 
-  const handleViewAll = (categoryId: number) => {
-    router.push('/category/' + categoryId);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      scroll('left');
+    } else if (isRightSwipe) {
+      scroll('right');
+    }
   };
 
   if (loading) {
     return (
-      <div className="py-8">
-        <div className="text-center text-gray-500">جاري التحميل...</div>
+      <div className="py-4 md:py-6">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-gray-200 w-9 h-9 animate-pulse"></div>
+              <div className="p-2 rounded-full bg-gray-200 w-9 h-9 animate-pulse"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4 lg:gap-6">
+            {[...Array(7)].map((_, i) => (
+              <div key={i} className="flex flex-col items-center animate-pulse">
+                <div className="w-full aspect-square rounded-2xl bg-gray-200 mb-2 md:mb-3"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -117,98 +155,65 @@ export default function CategoriesMenu() {
   const visibleCategories = categories.slice(currentIndex, currentIndex + itemsPerView);
 
   return (
-    <div className="py-8 md:py-12">
+    <div className="py-4 md:py-6">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <button
               onClick={() => scroll('right')}
               disabled={currentIndex === 0}
-              className="p-2 rounded-full bg-[#2c2c2c] text-white hover:bg-[#1a1a1a] transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
             <button
               onClick={() => scroll('left')}
               disabled={currentIndex >= maxIndex}
-              className="p-2 rounded-full bg-[#2c2c2c] text-white hover:bg-[#1a1a1a] transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold text-[#2c2c2c]">يجد ما تحتاجه</h2>
         </div>
 
-        <div
-          ref={containerRef}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-        >
-          {visibleCategories.map((category) => (
-            <div
-              key={category.id}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => handleViewAll(category.id)}
-                    className="text-sm text-gray-500 hover:text-[#d4af37] transition-colors flex items-center gap-1"
-                  >
-                    عرض الكل
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <div className="text-right">
-                    <h3 className="font-bold text-[#2c2c2c] text-sm md:text-base line-clamp-1">
-                      {category.name}
-                    </h3>
-                    <p className="text-xs text-gray-400">
-                      {category.subcategories?.length || 0} منتجات
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3 md:p-4">
-                <div className="grid grid-cols-4 gap-2 md:gap-3">
-                  {category.subcategories?.slice(0, 4).map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="flex flex-col items-center cursor-pointer group"
-                      onClick={() => handleSubcategoryClick(sub.id)}
-                    >
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-100 border-2 border-gray-200 group-hover:border-[#d4af37] overflow-hidden flex items-center justify-center transition-all duration-300 mb-2">
-                        {sub.image_url ? (
-                          <Image
-                            src={'http://localhost:3000' + sub.image_url}
-                            alt={sub.name}
-                            width={56}
-                            height={56}
-                            unoptimized
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#d4af37] to-[#b8962e] flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">
-                              {sub.name.charAt(0)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-[10px] md:text-xs text-gray-600 text-center line-clamp-1 group-hover:text-[#d4af37] transition-colors">
-                        {sub.name}
+        <div className="relative overflow-hidden">
+          <div
+            ref={containerRef}
+            className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4 lg:gap-6 transition-all duration-500 ease-in-out"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {visibleCategories.map((category) => (
+              <div
+                key={category.id}
+                className="flex flex-col items-center cursor-pointer group"
+                onClick={() => handleCategoryClick(category.id)}
+              >
+                <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl transition-all duration-300 mb-2 md:mb-3 bg-white">
+                  {category.image_url ? (
+                    <Image
+                      src={'http://localhost:3000' + category.image_url}
+                      alt={category.name}
+                      width={120}
+                      height={120}
+                      unoptimized
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#d4af37] to-[#b8962e] flex items-center justify-center">
+                      <span className="text-white text-xl md:text-2xl font-bold">
+                        {category.name.charAt(0)}
                       </span>
                     </div>
-                  ))}
+                  )}
                 </div>
-
-                {(!category.subcategories || category.subcategories.length === 0) && (
-                  <div className="text-center py-4 text-gray-400 text-sm">
-                    لا توجد أقسام فرعية
-                  </div>
-                )}
+                <span className="text-[10px] sm:text-xs md:text-sm font-medium text-[#2c2c2c] text-center line-clamp-2 group-hover:text-[#d4af37] transition-colors">
+                  {category.name}
+                </span>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

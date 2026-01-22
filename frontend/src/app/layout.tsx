@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cairo, Tajawal } from "next/font/google";
+import { Cairo, Tajawal, Amiri } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 
@@ -17,6 +17,13 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
+const amiri = Amiri({
+  variable: "--font-amiri",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "متجر Sprint - تسوق بثقة وسهولة",
   description: "متجرك الإلكتروني الموثوق للتسوق الآمن والسريع",
@@ -30,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body
-        className={`${cairo.variable} ${tajawal.variable} antialiased`}
+        className={`${cairo.variable} ${tajawal.variable} ${amiri.variable} antialiased`}
       >
         <CartProvider>
           {children}

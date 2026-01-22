@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { X } from 'lucide-react';
 
 interface Subcategory {
   id: number;
@@ -20,12 +20,12 @@ interface Category {
   subcategories: Subcategory[];
 }
 
-interface MobileSidebarProps {
+interface MegaMenuProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
+const MegaMenu = memo(function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -53,16 +53,6 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     }
   }, [isOpen]);
 
-  const handleCategoryClick = (categoryId: number) => {
-    router.push(`/category/${categoryId}`);
-    onClose();
-  };
-
-  const handleSubcategoryClick = (subcategoryId: number, categoryId: number) => {
-    router.push(`/category/${categoryId}?subcategory=${subcategoryId}`);
-    onClose();
-  };
-
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -74,11 +64,23 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     };
   }, [isOpen]);
 
-  const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
+  const handleCategoryClick = (categoryId: number) => {
+    router.push(`/category/${categoryId}`);
+    onClose();
+  };
+
+  const handleSubcategoryClick = (subcategoryId: number, categoryId: number) => {
+    router.push(`/category/${categoryId}?subcategory=${subcategoryId}`);
+    onClose();
+  };
+
+  const selectedCategoryData = useMemo(
+    () => categories.find(cat => cat.id === selectedCategory),
+    [categories, selectedCategory]
+  );
 
   return (
     <>
-      {/* Overlay */}
       <div
         className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -165,7 +167,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                   </div>
 
                   {selectedCategoryData.subcategories && selectedCategoryData.subcategories.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {selectedCategoryData.subcategories.map((subcategory) => (
                         <div
                           key={subcategory.id}
@@ -180,6 +182,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                                 width={80}
                                 height={80}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-[#2c2c2c] to-[#4a4a4a] flex items-center justify-center">
@@ -208,4 +211,6 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       </div>
     </>
   );
-}
+});
+
+export default MegaMenu;

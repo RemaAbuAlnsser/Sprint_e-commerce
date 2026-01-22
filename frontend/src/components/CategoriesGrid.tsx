@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import gsap from 'gsap';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -13,7 +13,7 @@ interface Category {
   image_url?: string;
 }
 
-export default function CategoriesGrid() {
+const CategoriesGrid = memo(function CategoriesGrid() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -116,7 +116,7 @@ export default function CategoriesGrid() {
               onClick={() => handleCategoryClick(category.id)}
             >
               <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-                <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200" style={{ minHeight: '150px' }}>
                   {category.image_url ? (
                     <Image
                       src={`http://localhost:3000${category.image_url}`}
@@ -124,6 +124,7 @@ export default function CategoriesGrid() {
                       fill
                       unoptimized
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -144,4 +145,6 @@ export default function CategoriesGrid() {
       </div>
     </div>
   );
-}
+});
+
+export default CategoriesGrid;

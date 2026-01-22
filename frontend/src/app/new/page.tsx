@@ -11,6 +11,7 @@ import NewLabel from '@/components/NewLabel';
 import { useCart } from '@/contexts/CartContext';
 import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
 import { isProductNew } from '@/utils/dateUtils';
+import ProductSkeleton from '@/components/ProductSkeleton';
 
 interface Product {
   id: number;
@@ -162,7 +163,7 @@ export default function NewProductsPage() {
                 <div className="h-px bg-gradient-to-r from-transparent via-red-500 to-transparent flex-1 max-w-xs"></div>
                 <h1
                   ref={titleRef}
-                  className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c] flex items-center gap-3"
+                  className="section-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c] flex items-center gap-3"
                 >
                   <span className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-lg animate-pulse">
                     جديد
@@ -217,7 +218,13 @@ export default function NewProductsPage() {
               </div>
             )}
 
-            {products.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                {[...Array(10)].map((_, i) => (
+                  <ProductSkeleton key={i} />
+                ))}
+              </div>
+            ) : products.length === 0 ? (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-20">🆕</div>
                 <p className="text-gray-500 text-lg">لا توجد منتجات جديدة حالياً</p>
@@ -236,8 +243,7 @@ export default function NewProductsPage() {
                     <div className="product-card h-full flex flex-col">
                       <div 
                         onClick={() => {
-                          const slug = product.sku || encodeURIComponent(product.name);
-                          router.push(`/product/${slug}`);
+                          router.push(`/product/${product.sku}`);
                         }}
                         className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 flex-shrink-0 mb-3 cursor-pointer"
                       >
@@ -289,10 +295,9 @@ export default function NewProductsPage() {
                       <div className="text-center flex flex-col flex-1">
                         <h3 
                           onClick={() => {
-                            const slug = product.sku || encodeURIComponent(product.name);
-                            router.push(`/product/${slug}`);
+                            router.push(`/product/${product.sku}`);
                           }}
-                          className="text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
+                          className="product-name text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
                         >
                           {product.name}
                         </h3>
@@ -307,12 +312,12 @@ export default function NewProductsPage() {
                                   -{Math.round(((product.old_price - product.price) / product.old_price) * 100)}%
                                 </span>
                               </div>
-                              <span className="text-lg md:text-xl font-bold text-[#d4af37]">
+                              <span className="product-price text-lg md:text-xl font-bold text-[#d4af37]">
                                 ₪{Number(product.price).toFixed(2)}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-lg md:text-xl font-bold text-[#2c2c2c]">
+                            <span className="product-price text-lg md:text-xl font-bold text-[#2c2c2c]">
                               ₪{Number(product.price).toFixed(2)}
                             </span>
                           )}

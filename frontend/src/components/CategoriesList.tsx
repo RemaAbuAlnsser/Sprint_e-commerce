@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -9,6 +10,7 @@ interface Subcategory {
   name: string;
   description?: string;
   image_url?: string;
+  category_id: number;
 }
 
 interface Category {
@@ -19,6 +21,7 @@ interface Category {
 }
 
 export default function CategoriesList() {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -134,6 +137,7 @@ export default function CategoriesList() {
                   {category.subcategories.map((subcategory) => (
                     <div
                       key={subcategory.id}
+                      onClick={() => router.push(`/category/${category.id}?subcategory=${subcategory.id}`)}
                       className="p-4 pr-16 hover:bg-white transition-colors cursor-pointer border-b border-gray-100 last:border-b-0"
                     >
                       <div className="text-right">

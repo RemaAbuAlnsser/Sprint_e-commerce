@@ -1,0 +1,636 @@
+'use client'
+
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, X, Filter, ChevronDown, SlidersHorizontal, Sparkles, Clock, TrendingUp, Tag, Building2 } from 'lucide-react'
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
+import ProductCard from '@/components/home/ProductCard'
+import { ProductCardSkeleton } from '@/components/ui/Skeleton'
+import { API_URL } from '@/lib/api';
+
+interface Product {
+  id: string;
+  title: string;
+  subtitle: string;
+  handle: string;
+  thumbnail: string;
+  hover_image?: string;
+  is_exclusive?: boolean;
+  variants: { id: string; price: number; compare_at_price?: number; inventory_quantity?: number }[];
+  brand_name: string;
+  category_name: string;
+}
+
+interface Suggestion {
+  type: 'product' | 'brand' | 'category';
+  text: string;
+}
+
+interface FilterState {
+  category: string;
+  brand: string;
+  color: string;
+  minPrice: string;
+  maxPrice: string;
+  sort: string;
+}
+
+function SearchContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const initialQuery = searchParams.get('q') || ''
+  
+  const [query, setQuery] = useState(initialQuery)
+  const [products, setProducts] = useState<Product[]>([])
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [loading, setLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string; handle: string }[]>([])
+  const [popularBrands, setPopularBrands] = useState<string[]>([])
+  const [popularCategories, setPopularCategories] = useState<{ name: string; handle: string }[]>([])
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  
+  const [filters, setFilters] = useState<FilterState>({
+    category: searchParams.get('category') || '',
+    brand: searchParams.get('brand') || '',
+    color: searchParams.get('color') || '',
+    minPrice: searchParams.get('min_price') || '',
+    maxPrice: searchParams.get('max_price') || '',
+    sort: searchParams.get('sort') || 'relevance'
+  })
+
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<NodeJS.Timeout>()
+
+  const availableColors = [
+    'ط£ط³ظˆط¯', 'ط£ط¨ظٹط¶', 'ط£ط²ط±ظ‚', 'ط£ط­ظ…ط±',
+    'ط£ط³ظˆط¯ ظ…ظ…ظˆط¬', 'ط³ظƒظ†ظٹ', 'ط£ط­ظ…ط± ظ…ظ…ظˆط¬', 'ط£ط¨ظٹط¶ ظ…ظ…ظˆط¬'
+  ]
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches')
+    if (saved) {
+      setRecentSearches(JSON.parse(saved))
+    }
+  }, [])
+
+  // Fetch brands and categories for filters
+  useEffect(() => {
+    const fetchFiltersData = async () => {
+      try {
+        const [brandsRes, categoriesRes, popularRes] = await Promise.all([
+          fetch(`${API_URL}/store/brands`),
+          fetch(`${API_URL}/store/collections`),
+          fetch(`${API_URL}/store/search/popular`)
+        ])
+
+        if (brandsRes.ok) {
+          const data = await brandsRes.json()
+          setBrands(data.brands || [])
+        }
+        if (categoriesRes.ok) {
+          const data = await categoriesRes.json()
+          setCategories(data.categories || [])
+        }
+        if (popularRes.ok) {
+          const data = await popularRes.json()
+          setPopularBrands(data.popular_brands?.map((b: any) => b.name) || [])
+          setPopularCategories(data.popular_categories || [])
+        }
+      } catch (error) {
+        // Error handled silently
+      }
+    }
+    fetchFiltersData()
+  }, [])
+
+  // Search function
+  const performSearch = useCallback(async (searchQuery: string, searchFilters: FilterState) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (searchQuery) params.set('q', searchQuery)
+      if (searchFilters.category) params.set('category', searchFilters.category)
+      if (searchFilters.brand) params.set('brand', searchFilters.brand)
+      if (searchFilters.color) params.set('color', searchFilters.color)
+      if (searchFilters.minPrice) params.set('min_price', searchFilters.minPrice)
+      if (searchFilters.maxPrice) params.set('max_price', searchFilters.maxPrice)
+      if (searchFilters.sort) params.set('sort', searchFilters.sort)
+
+      const res = await fetch(`${API_URL}/store/search?${params.toString()}`)
+      const data = await res.json()
+      
+      setProducts(data.products || [])
+      setTotal(data.total || 0)
+
+      // Save to recent searches
+      if (searchQuery && searchQuery.length > 1) {
+        const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5)
+        setRecentSearches(updated)
+        localStorage.setItem('recentSearches', JSON.stringify(updated))
+      }
+    } catch (error) {
+      // Error handled silently
+    } finally {
+      setLoading(false)
+    }
+  }, [recentSearches])
+
+  // Initial search on page load
+  useEffect(() => {
+    if (initialQuery || filters.category || filters.brand) {
+      performSearch(initialQuery, filters)
+    }
+  }, [])
+
+  // Fetch suggestions
+  const fetchSuggestions = async (searchQuery: string) => {
+    if (searchQuery.length < 2) {
+      setSuggestions([])
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/store/search/suggestions?q=${encodeURIComponent(searchQuery)}`)
+      const data = await res.json()
+      setSuggestions(data.suggestions || [])
+    } catch (error) {
+      // Error handled silently
+    }
+  }
+
+  // Handle input change with debounce
+  const handleInputChange = (value: string) => {
+    setQuery(value)
+    setShowSuggestions(true)
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(value)
+    }, 300)
+  }
+
+  // Handle search submit
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    setShowSuggestions(false)
+    performSearch(query, filters)
+    
+    // Update URL
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key === 'minPrice' ? 'min_price' : key === 'maxPrice' ? 'max_price' : key, value)
+    })
+    router.push(`/search?${params.toString()}`)
+  }
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: Suggestion) => {
+    setQuery(suggestion.text)
+    setShowSuggestions(false)
+    performSearch(suggestion.text, filters)
+  }
+
+  // Handle filter change
+  const handleFilterChange = (key: keyof FilterState, value: string) => {
+    const newFilters = { ...filters, [key]: value }
+    setFilters(newFilters)
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    setShowFilters(false)
+    performSearch(query, filters)
+  }
+
+  // Clear filters
+  const clearFilters = () => {
+    const clearedFilters: FilterState = {
+      category: '',
+      brand: '',
+      color: '',
+      minPrice: '',
+      maxPrice: '',
+      sort: 'relevance'
+    }
+    setFilters(clearedFilters)
+    performSearch(query, clearedFilters)
+  }
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node) &&
+          searchInputRef.current && !searchInputRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const hasActiveFilters = filters.category || filters.brand || filters.color || filters.minPrice || filters.maxPrice
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white" dir="rtl">
+      <Navbar />
+      <main className="flex-1">
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Search Header */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-2">
+              ط§ظ„ط¨ط­ط« ط§ظ„ط°ظƒظٹ
+            </h1>
+            <p className="text-gray-600">ط§ط¨ط­ط« ط¹ظ† ط£ظٹ ظ…ظ†طھط¬ ط¨ط³ظ‡ظˆظ„ط© ظˆط³ط±ط¹ط©</p>
+          </motion.div>
+
+          {/* Search Input */}
+          <form onSubmit={handleSearch} className="relative">
+            <div className="relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={query}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder="ط§ط¨ط­ط« ط¹ظ† ظ…ظ†طھط¬ط§طھطŒ ظ…ط§ط±ظƒط§طھطŒ طھطµظ†ظٹظپط§طھ..."
+                className="w-full px-6 py-4 pr-14 text-lg bg-white border-2 border-gray-200 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all shadow-lg"
+              />
+              <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => { setQuery(''); setSuggestions([]); }}
+                  className="absolute left-16 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="absolute left-3 top-1/2 -translate-y-1/2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+              >
+                ط¨ط­ط«
+              </button>
+            </div>
+
+            {/* Suggestions Dropdown */}
+            <AnimatePresence>
+              {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0 || popularBrands.length > 0) && (
+                <motion.div
+                  ref={suggestionsRef}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+                >
+                  {/* Suggestions */}
+                  {suggestions.length > 0 && (
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <Sparkles className="w-4 h-4" />
+                        <span>ط§ظ‚طھط±ط§ط­ط§طھ</span>
+                      </div>
+                      {suggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="flex items-center gap-3 w-full px-3 py-2 hover:bg-gray-50 rounded-lg text-right transition-colors"
+                        >
+                          {suggestion.type === 'product' && <Search className="w-4 h-4 text-gray-400" />}
+                          {suggestion.type === 'brand' && <Building2 className="w-4 h-4 text-blue-500" />}
+                          {suggestion.type === 'category' && <Tag className="w-4 h-4 text-green-500" />}
+                          <span className="text-gray-700">{suggestion.text}</span>
+                          <span className="text-xs text-gray-400 mr-auto">
+                            {suggestion.type === 'product' && 'ظ…ظ†طھط¬'}
+                            {suggestion.type === 'brand' && 'ظ…ط§ط±ظƒط©'}
+                            {suggestion.type === 'category' && 'طھطµظ†ظٹظپ'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Recent Searches */}
+                  {recentSearches.length > 0 && !query && (
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <Clock className="w-4 h-4" />
+                        <span>ط¹ظ…ظ„ظٹط§طھ ط¨ط­ط« ط³ط§ط¨ظ‚ط©</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {recentSearches.map((search, index) => (
+                          <button
+                            key={index}
+                            onClick={() => { setQuery(search); performSearch(search, filters); setShowSuggestions(false); }}
+                            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-700 transition-colors"
+                          >
+                            {search}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Popular Categories & Brands */}
+                  {!query && (popularCategories.length > 0 || popularBrands.length > 0) && (
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <TrendingUp className="w-4 h-4" />
+                        <span>ط§ظ„ط£ظƒط«ط± ط´ط¹ط¨ظٹط©</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {popularCategories.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-400 mb-2">ط§ظ„طھطµظ†ظٹظپط§طھ</p>
+                            {popularCategories.slice(0, 3).map((cat, index) => (
+                              <Link
+                                key={index}
+                                href={`/search?category=${cat.handle}`}
+                                className="block px-2 py-1 text-sm text-gray-700 hover:text-primary"
+                              >
+                                {cat.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                        {popularBrands.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-400 mb-2">ط§ظ„ظ…ط§ط±ظƒط§طھ</p>
+                            {popularBrands.slice(0, 3).map((brand, index) => (
+                              <button
+                                key={index}
+                                onClick={() => { handleFilterChange('brand', brand); performSearch(query, { ...filters, brand }); setShowSuggestions(false); }}
+                                className="block px-2 py-1 text-sm text-gray-700 hover:text-primary text-right w-full"
+                              >
+                                {brand}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </form>
+
+          {/* Quick Filters */}
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all ${
+                hasActiveFilters ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 hover:border-primary'
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span>ط§ظ„ظپظ„ط§طھط±</span>
+              {hasActiveFilters && <span className="w-2 h-2 bg-primary rounded-full" />}
+            </button>
+
+            <select
+              value={filters.sort}
+              onChange={(e) => { handleFilterChange('sort', e.target.value); performSearch(query, { ...filters, sort: e.target.value }); }}
+              className="px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-primary outline-none bg-white"
+            >
+              <option value="relevance">ط§ظ„ط£ظƒط«ط± طµظ„ط©</option>
+              <option value="newest">ط§ظ„ط£ط­ط¯ط«</option>
+              <option value="price_asc">ط§ظ„ط³ط¹ط±: ظ…ظ† ط§ظ„ط£ظ‚ظ„</option>
+              <option value="price_desc">ط§ظ„ط³ط¹ط±: ظ…ظ† ط§ظ„ط£ط¹ظ„ظ‰</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-3 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+              >
+                <X className="w-4 h-4" />
+                <span>ظ…ط³ط­ ط§ظ„ظپظ„ط§طھط±</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filters Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="max-w-4xl mx-auto mb-8 overflow-hidden"
+            >
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Category Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ط§ظ„طھطµظ†ظٹظپ</label>
+                    <select
+                      value={filters.category}
+                      onChange={(e) => handleFilterChange('category', e.target.value)}
+                      className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                    >
+                      <option value="">ط¬ظ…ظٹط¹ ط§ظ„طھطµظ†ظٹظپط§طھ</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.handle}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Brand Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ط§ظ„ظ…ط§ط±ظƒط©</label>
+                    <select
+                      value={filters.brand}
+                      onChange={(e) => handleFilterChange('brand', e.target.value)}
+                      className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                    >
+                      <option value="">ط¬ظ…ظٹط¹ ط§ظ„ظ…ط§ط±ظƒط§طھ</option>
+                      {brands.map((brand) => (
+                        <option key={brand.id} value={brand.name}>{brand.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Color Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ط§ظ„ظ„ظˆظ†</label>
+                    <select
+                      value={filters.color}
+                      onChange={(e) => handleFilterChange('color', e.target.value)}
+                      className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                    >
+                      <option value="">ط¬ظ…ظٹط¹ ط§ظ„ط£ظ„ظˆط§ظ†</option>
+                      {availableColors.map((color) => (
+                        <option key={color} value={color}>{color}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Price Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ظ†ط·ط§ظ‚ ط§ظ„ط³ط¹ط±</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={filters.minPrice}
+                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                        placeholder="ظ…ظ†"
+                        className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                      />
+                      <input
+                        type="number"
+                        value={filters.maxPrice}
+                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                        placeholder="1000000"
+                        className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                  >
+                    ط¥ط¹ط§ط¯ط© طھط¹ظٹظٹظ†
+                  </button>
+                  <button
+                    onClick={applyFilters}
+                    className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+                  >
+                    طھط·ط¨ظٹظ‚ ط§ظ„ظپظ„ط§طھط±
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Results */}
+        <div className="max-w-7xl mx-auto">
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {[...Array(10)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* Results Header */}
+              {(query || hasActiveFilters) && (
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-gray-600">
+                    {total > 0 ? (
+                      <>طھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ <span className="font-bold text-primary">{total}</span> ظ…ظ†طھط¬</>
+                    ) : (
+                      'ظ„ظ… ظٹطھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ†طھط§ط¦ط¬'
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {/* Products Grid */}
+              {products.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                >
+                  {products.map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <ProductCard product={{
+                        id: product.id,
+                        title: product.title,
+                        price: product.variants?.[0]?.price || 0,
+                        originalPrice: product.variants?.[0]?.compare_at_price || undefined,
+                        image: product.thumbnail || '',
+                        hoverImage: product.hover_image || undefined,
+                        slug: product.handle,
+                        variantId: product.variants?.[0]?.id || '',
+                        inventory: product.variants?.[0]?.inventory_quantity || 0,
+                        isExclusive: product.is_exclusive || false
+                      }} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (query || hasActiveFilters) ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
+                  <div className="text-6xl mb-4">ًں”چ</div>
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">ظ„ظ… ظٹطھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ†طھط§ط¦ط¬</h3>
+                  <p className="text-gray-500 mb-4">ط¬ط±ط¨ ط§ظ„ط¨ط­ط« ط¨ظƒظ„ظ…ط§طھ ظ…ط®طھظ„ظپط© ط£ظˆ طھط؛ظٹظٹط± ط§ظ„ظپظ„ط§طھط±</p>
+                  <button
+                    onClick={clearFilters}
+                    className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+                  >
+                    ظ…ط³ط­ ط§ظ„ظپظ„ط§طھط±
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
+                  <div className="text-6xl mb-4">âœ¨</div>
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">ط§ط¨ط¯ط£ ط§ظ„ط¨ط­ط«</h3>
+                  <p className="text-gray-500">ط§ظƒطھط¨ ظپظٹ ظ…ط±ط¨ط¹ ط§ظ„ط¨ط­ط« ظ„ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ…ظ†طھط¬ط§طھظƒ ط§ظ„ظ…ظپط¶ظ„ط©</p>
+                </motion.div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col bg-secondary/30" dir="rtl">
+        <Navbar />
+        <main className="flex-1">
+          <div className="container mx-auto px-4 py-16 text-center">
+            <div className="text-gray-600">ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...</div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
+  )
+}

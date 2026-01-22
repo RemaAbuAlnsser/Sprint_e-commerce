@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Image from 'next/image';
-import { ShoppingCart, ArrowRight, Heart } from 'lucide-react';
+import { ShoppingCart, ArrowRight, Heart, Eye } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import Toast from '@/components/Toast';
+import ProductDetailSkeleton from '@/components/ProductDetailSkeleton';
+import Footer from '@/components/Footer';
 import gsap from 'gsap';
 
 interface ProductImage {
@@ -43,12 +45,13 @@ interface Product {
   category_id: number;
   subcategory_id?: number;
   images?: ProductImage[];
+  sku?: string;
 }
 
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
-  const productName = decodeURIComponent(params.name as string);
+  const productSku = params.name as string;
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -59,18 +62,23 @@ export default function ProductPage() {
   const [selectedColor, setSelectedColor] = useState<ProductColor | null>(null);
   const [colorImages, setColorImages] = useState<ProductColorImage[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
   const addToCartButtonRef = useRef<HTMLButtonElement>(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
     fetchProduct();
-  }, [productName]);
+  }, [productSku]);
 
   useEffect(() => {
     if (product?.id) {
       fetchProductColors(product.id);
     }
-  }, [product?.id]);
+    if (product?.category_id) {
+      fetchRelatedProducts(product.category_id, product.id);
+    }
+  }, [product?.id, product?.category_id]);
 
   const fetchProductColors = async (productId: number) => {
     try {
@@ -107,44 +115,17 @@ export default function ProductPage() {
   const fetchProduct = async () => {
     try {
       setIsLoading(true);
-      console.log('Fetching product:', productName);
+      console.log('Fetching product with SKU:', productSku);
       
-      // Try to fetch by SKU first
-      const skuResponse = await fetch(`http://localhost:3000/products/sku/${productName}`);
+      const response = await fetch(`http://localhost:3000/products/sku/${productSku}`);
       
-      if (skuResponse.ok) {
-        const productData = await skuResponse.json();
-        console.log('Product data from SKU:', productData);
-        console.log('Product images:', productData?.images);
-        
-        if (productData && productData.id) {
-          setProduct(productData);
-          return;
-        }
-      }
-      
-      // Fallback: search by name
-      console.log('Fallback: searching by name');
-      const response = await fetch('http://localhost:3000/products');
       if (response.ok) {
-        const data = await response.json();
-        const foundProduct = data.find((p: Product) => p.name === decodeURIComponent(productName));
-        
-        if (foundProduct) {
-          console.log('Found product by name:', foundProduct);
-          const detailsResponse = await fetch(`http://localhost:3000/products/${foundProduct.id}`);
-          if (detailsResponse.ok) {
-            const productWithImages = await detailsResponse.json();
-            console.log('Product with images:', productWithImages);
-            console.log('Images array:', productWithImages?.images);
-            setProduct(productWithImages);
-          } else {
-            setProduct(foundProduct);
-          }
-        } else {
-          setProduct(null);
-        }
+        const productData = await response.json();
+        console.log('Product data:', productData);
+        console.log('Product images:', productData?.images);
+        setProduct(productData);
       } else {
+        console.error('Failed to fetch product:', response.status);
         setProduct(null);
       }
     } catch (error) {
@@ -152,6 +133,26 @@ export default function ProductPage() {
       setProduct(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async (categoryId: number, currentProductId: number) => {
+    try {
+      setLoadingRelated(true);
+      const response = await fetch(`http://localhost:3000/products/category/${categoryId}`);
+      
+      if (response.ok) {
+        const products = await response.json();
+        // Filter out current product and limit to 4 products
+        const filtered = products
+          .filter((p: Product) => p.id !== currentProductId)
+          .slice(0, 4);
+        setRelatedProducts(filtered);
+      }
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+    } finally {
+      setLoadingRelated(false);
     }
   };
 
@@ -257,12 +258,7 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="container mx-auto px-4 md:px-6 pt-24 pb-12">
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-[#2c2c2c]"></div>
-            <p className="mt-4 text-gray-600">جاري التحميل...</p>
-          </div>
-        </div>
+        <ProductDetailSkeleton />
       </div>
     );
   }
@@ -603,7 +599,115 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
+
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent flex-1 max-w-xs"></div>
+                <h2 className="text-2xl md:text-3xl font-bold text-[#2c2c2c]">
+                  قد يعجبك أيضاً
+                </h2>
+                <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent flex-1 max-w-xs"></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {relatedProducts.map((relatedProduct) => (
+                <div
+                  key={relatedProduct.id}
+                  className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+                >
+                  {/* Product Image */}
+                  <div 
+                    onClick={() => router.push(`/product/${relatedProduct.sku || relatedProduct.id}`)}
+                    className="relative aspect-square overflow-hidden cursor-pointer"
+                  >
+                    {relatedProduct.image_url ? (
+                      <Image
+                        src={`http://localhost:3000${relatedProduct.image_url}`}
+                        alt={relatedProduct.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <span className="text-4xl opacity-20">📦</span>
+                      </div>
+                    )}
+                    
+                    {/* New Badge */}
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      جديد
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-[#d4af37] hover:text-white transition-colors">
+                        <Heart size={16} />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/product/${relatedProduct.sku || relatedProduct.id}`);
+                        }}
+                        className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-[#d4af37] hover:text-white transition-colors"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Product Info */}
+                  <div className="p-3 text-center">
+                    <h3 
+                      onClick={() => router.push(`/product/${relatedProduct.sku || relatedProduct.id}`)}
+                      className="text-sm md:text-base font-bold text-gray-800 mb-2 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors min-h-[40px]"
+                    >
+                      {relatedProduct.name}
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <span className="text-lg font-bold text-[#2c2c2c]">
+                        ₪{Number(relatedProduct.price).toFixed(2)}
+                      </span>
+                      {relatedProduct.old_price && relatedProduct.old_price > relatedProduct.price && (
+                        <span className="text-sm text-gray-400 line-through">
+                          ₪{Number(relatedProduct.old_price).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Add to Cart Button */}
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const result = await addToCart({
+                          id: relatedProduct.id,
+                          name: relatedProduct.name,
+                          price: relatedProduct.price,
+                          image_url: relatedProduct.image_url,
+                        });
+                        if (result.success) {
+                          setToastMessage(`تمت إضافة "${relatedProduct.name}" إلى السلة`);
+                          setShowToast(true);
+                        }
+                      }}
+                      className="w-full py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart size={16} />
+                      <span>أضف للسلة</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

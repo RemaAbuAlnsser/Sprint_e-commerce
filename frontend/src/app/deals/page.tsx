@@ -11,6 +11,7 @@ import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
 import NewLabel from '@/components/NewLabel';
 import { isProductNew } from '@/utils/dateUtils';
 import Toast from '@/components/Toast';
+import ProductSkeleton from '@/components/ProductSkeleton';
 
 interface Product {
   id: number;
@@ -34,6 +35,7 @@ export default function DealsPage() {
   const [toastMessage, setToastMessage] = useState('');
   const gridRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const hasAnimated = useRef(false);
   const { addToCart } = useCart();
   const { isAnimating, createFlyingAnimation } = useFlyingAnimation();
 
@@ -88,27 +90,39 @@ export default function DealsPage() {
   }, [addToCart, createFlyingAnimation]);
 
   useEffect(() => {
-    if (!loading && products.length > 0 && gridRef.current) {
-      gsap.fromTo(
-        titleRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }
-      );
+    if (loading || products.length === 0 || !gridRef.current || hasAnimated.current) {
+      return;
+    }
 
-      gsap.fromTo(
-        gridRef.current.children,
-        { opacity: 0, y: 50 },
-        {
+    hasAnimated.current = true;
+    
+    const ctx = gsap.context(() => {
+      if (titleRef.current) {
+        gsap.set(titleRef.current, { opacity: 0, y: 30 });
+        gsap.to(titleRef.current, {
           opacity: 1,
           y: 0,
           duration: 0.6,
-          stagger: 0.1,
-          ease: 'power3.out',
-          delay: 0.3,
-        }
-      );
-    }
-  }, [loading, products]);
+          ease: 'power2.out',
+        });
+      }
+
+      const items = gridRef.current?.children;
+      if (items && items.length > 0) {
+        gsap.set(items, { opacity: 0, y: 40 });
+        gsap.to(items, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'power2.out',
+          delay: 0.2,
+        });
+      }
+    }, gridRef);
+
+    return () => ctx.revert();
+  }, [loading, products.length]);
 
   if (loading) {
     return (
@@ -147,7 +161,7 @@ export default function DealsPage() {
                 <Tag className="w-8 h-8 text-[#d4af37]" />
                 <h1
                   ref={titleRef}
-                  className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c]"
+                  className="section-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c]"
                 >
                   العروض والخصومات
                 </h1>
@@ -162,7 +176,13 @@ export default function DealsPage() {
             </p>
           </div>
 
-          {products.length === 0 ? (
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              {[...Array(10)].map((_, i) => (
+                <ProductSkeleton key={i} />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4 opacity-20">🏷️</div>
               <p className="text-gray-500 text-lg">لا توجد عروض متاحة حالياً</p>
@@ -185,8 +205,7 @@ export default function DealsPage() {
                 >
                   <div 
                     onClick={() => {
-                      const slug = product.sku || encodeURIComponent(product.name);
-                      router.push(`/product/${slug}`);
+                      router.push(`/product/${product.sku}`);
                     }}
                     className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-3 cursor-pointer"
                   >
@@ -239,10 +258,9 @@ export default function DealsPage() {
                   <div className="text-center">
                     <h3 
                       onClick={() => {
-                        const slug = product.sku || encodeURIComponent(product.name);
-                        router.push(`/product/${slug}`);
+                        router.push(`/product/${product.sku}`);
                       }}
-                      className="text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
+                      className="product-name text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
                     >
                       {product.name}
                     </h3>
@@ -252,12 +270,12 @@ export default function DealsPage() {
                           <span className="text-sm text-gray-400 line-through">
                             ₪{Number(product.old_price).toFixed(2)}
                           </span>
-                          <span className="text-lg md:text-xl font-bold text-[#d4af37]">
+                          <span className="product-price text-lg md:text-xl font-bold text-[#d4af37]">
                             ₪{Number(product.price).toFixed(2)}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-lg md:text-xl font-bold text-[#2c2c2c]">
+                        <span className="product-price text-lg md:text-xl font-bold text-[#2c2c2c]">
                           ₪{Number(product.price).toFixed(2)}
                         </span>
                       )}

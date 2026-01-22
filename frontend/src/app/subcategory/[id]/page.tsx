@@ -18,6 +18,7 @@ interface Product {
   hover_image_url?: string;
   category_name: string;
   stock: number;
+  sku: string;
 }
 
 interface Subcategory {
@@ -37,6 +38,7 @@ export default function SubcategoryPage() {
   const [toastMessage, setToastMessage] = useState('');
   const gridRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const hasAnimated = useRef(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -110,27 +112,39 @@ export default function SubcategoryPage() {
   }, [addToCart]);
 
   useEffect(() => {
-    if (!loading && subcategory && products.length > 0 && gridRef.current) {
-      gsap.fromTo(
-        titleRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }
-      );
+    if (loading || !subcategory || products.length === 0 || !gridRef.current || hasAnimated.current) {
+      return;
+    }
 
-      gsap.fromTo(
-        gridRef.current.children,
-        { opacity: 0, y: 50 },
-        {
+    hasAnimated.current = true;
+    
+    const ctx = gsap.context(() => {
+      if (titleRef.current) {
+        gsap.set(titleRef.current, { opacity: 0, y: 30 });
+        gsap.to(titleRef.current, {
           opacity: 1,
           y: 0,
           duration: 0.6,
-          stagger: 0.1,
-          ease: 'power3.out',
-          delay: 0.3,
-        }
-      );
-    }
-  }, [loading, subcategory, products]);
+          ease: 'power2.out',
+        });
+      }
+
+      const items = gridRef.current?.children;
+      if (items && items.length > 0) {
+        gsap.set(items, { opacity: 0, y: 40 });
+        gsap.to(items, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'power2.out',
+          delay: 0.2,
+        });
+      }
+    }, gridRef);
+
+    return () => ctx.revert();
+  }, [loading, subcategory, products.length]);
 
   if (loading) {
     return (
@@ -175,7 +189,7 @@ export default function SubcategoryPage() {
               <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent flex-1 max-w-xs"></div>
               <h1
                 ref={titleRef}
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c]"
+                className="section-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#2c2c2c]"
               >
                 {subcategory.name}
               </h1>
@@ -206,7 +220,10 @@ export default function SubcategoryPage() {
                   key={product.id}
                   className="product-card group"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-3">
+                  <div 
+                    onClick={() => router.push(`/product/${product.sku}`)}
+                    className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-3 cursor-pointer"
+                  >
                     {product.image_url ? (
                       <>
                         <Image
@@ -240,11 +257,14 @@ export default function SubcategoryPage() {
                   </div>
 
                   <div className="text-center">
-                    <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2">
+                    <h3 
+                      onClick={() => router.push(`/product/${product.sku}`)}
+                      className="product-name text-lg md:text-xl font-bold text-gray-800 mb-3 line-clamp-2 cursor-pointer hover:text-[#d4af37] transition-colors"
+                    >
                       {product.name}
                     </h3>
                     <div className="mb-4">
-                      <span className="text-lg md:text-xl font-bold text-[#2c2c2c]">
+                      <span className="product-price text-lg md:text-xl font-bold text-[#2c2c2c]">
                         ₪{Number(product.price).toFixed(2)}
                       </span>
                     </div>
