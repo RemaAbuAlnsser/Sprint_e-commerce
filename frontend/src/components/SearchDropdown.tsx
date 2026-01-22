@@ -109,11 +109,21 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
       const productsRes = await fetch(`http://localhost:3000/products/search?q=${encodeURIComponent(searchQuery)}`);
       
       if (productsRes.ok) {
-        const data = await productsRes.json();
-        setProducts((data.products || []).slice(0, 6));
+        const text = await productsRes.text();
+        try {
+          const data = JSON.parse(text);
+          setProducts((data.products || []).slice(0, 6));
+        } catch (jsonError) {
+          console.error('Invalid JSON response:', text);
+          setProducts([]);
+        }
+      } else {
+        console.error('API request failed:', productsRes.status, productsRes.statusText);
+        setProducts([]);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
