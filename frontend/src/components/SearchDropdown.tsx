@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Search, X, Clock, TrendingUp } from 'lucide-react';
@@ -48,8 +49,8 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
     const fetchData = async () => {
       try {
         const [categoriesRes, popularRes] = await Promise.all([
-          fetch('http://localhost:3000/categories'),
-          fetch('http://localhost:3000/products/search/popular')
+          fetch('http://104.234.26.192:3000/categories'),
+          fetch('http://104.234.26.192:3000/products/search/popular')
         ]);
 
         if (categoriesRes.ok) {
@@ -106,7 +107,7 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
 
     try {
       setLoading(true);
-      const productsRes = await fetch(`http://localhost:3000/products/search?q=${encodeURIComponent(searchQuery)}`);
+      const productsRes = await fetch(`http://104.234.26.192:3000/products/search?q=${encodeURIComponent(searchQuery)}`);
       
       if (productsRes.ok) {
         const text = await productsRes.text();
@@ -249,7 +250,7 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
                             <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 group-hover:shadow-lg transition-all group-hover:scale-105">
                               {product.image_url ? (
                                 <Image
-                                  src={`http://localhost:3000${product.image_url}`}
+                                  src={`http://104.234.26.192:3000${product.image_url}`}
                                   alt={product.name}
                                   width={56}
                                   height={56}

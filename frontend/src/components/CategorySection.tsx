@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight, ShoppingCart, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/api';
 import { useCart } from '@/contexts/CartContext';
 import { useFlyingAnimation } from '@/hooks/useFlyingAnimation';
 import NewLabel from '@/components/NewLabel';
@@ -60,7 +61,7 @@ const CategorySection = memo(function CategorySection({ category, index }: Categ
     const fetchProducts = async () => {
       try {
         console.log(`Fetching products for category ${category.id}: ${category.name}`);
-        const response = await fetch(`http://localhost:3000/products/category/${category.id}`);
+        const response = await fetch(`${API_URL}/products/category/${category.id}`);
         console.log(`Response status for category ${category.id}:`, response.status);
         if (response.ok) {
           const data = await response.json();
@@ -234,7 +235,7 @@ const CategorySection = memo(function CategorySection({ category, index }: Categ
                   {product.image_url ? (
                     <>
                       <Image
-                        src={`http://localhost:3000${product.image_url}`}
+                        src={`${API_URL}${product.image_url}`}
                         alt={product.name}
                         fill
                         unoptimized
@@ -243,7 +244,7 @@ const CategorySection = memo(function CategorySection({ category, index }: Categ
                       />
                       {product.hover_image_url && (
                         <Image
-                          src={`http://localhost:3000${product.hover_image_url}`}
+                          src={`${API_URL}${product.hover_image_url}`}
                           alt={product.name}
                           fill
                           unoptimized

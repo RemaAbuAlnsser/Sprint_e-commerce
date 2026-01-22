@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
@@ -41,7 +42,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = async (product: { id: number; name: string; price: number; image_url?: string; color_name?: string; color_image_url?: string }) => {
     try {
       // فحص الكمية المتوفرة من الباك إند
-      const response = await fetch(`http://localhost:3000/products/${product.id}`);
+      const response = await fetch(`http://104.234.26.192:3000/products/${product.id}`);
       if (!response.ok) {
         return { success: false, message: 'فشل التحقق من توفر المنتج' };
       }

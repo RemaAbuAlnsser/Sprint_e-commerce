@@ -2,9 +2,15 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/api';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 interface Category {
   id: number;
@@ -14,20 +20,17 @@ interface Category {
 }
 
 export default function CategoriesMenu() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsPerView, setItemsPerView] = useState(4);
-  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const hasAnimated = useRef(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/categories');
+        const response = await fetch(`${API_URL}/categories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -42,180 +45,152 @@ export default function CategoriesMenu() {
   }, []);
 
   useEffect(() => {
-    if (loading || categories.length === 0 || !containerRef.current || hasAnimated.current) {
-      return;
-    }
+    if (loading || categories.length === 0) return;
 
-    hasAnimated.current = true;
-    
     const ctx = gsap.context(() => {
-      const items = containerRef.current?.children;
-      if (!items || items.length === 0) return;
-
-      gsap.set(items, { opacity: 0, y: 30, scale: 0.9 });
-      
-      gsap.to(items, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.5,
-        stagger: 0.05,
-        ease: 'power2.out',
-        delay: 0.1,
+      cardsRef.current.forEach((card, index) => {
+        if (!card) return;
+        gsap.fromTo(card,
+          { y: 80, opacity: 0, scale: 0.9 },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.6,
+            delay: index * 0.1,
+            ease: 'back.out(1.2)',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top 90%',
+              toggleActions: 'play none none reverse',
+            },
+          }
+        );
       });
-    }, containerRef);
+    }, sectionRef);
 
     return () => ctx.revert();
   }, [loading, categories]);
 
-  const getItemsPerView = useCallback(() => {
-    if (typeof window === 'undefined') return 4;
-    if (window.innerWidth < 640) return 4;
-    if (window.innerWidth < 768) return 4;
-    if (window.innerWidth < 1024) return 5;
-    return 7;
-  }, []);
-
-  useEffect(() => {
-    const updateItemsPerView = () => {
-      setItemsPerView(getItemsPerView());
-    };
-    updateItemsPerView();
-    window.addEventListener('resize', updateItemsPerView);
-    return () => window.removeEventListener('resize', updateItemsPerView);
-  }, [getItemsPerView]);
-
-  const maxIndex = Math.max(0, categories.length - itemsPerView);
-
   const scroll = useCallback((direction: 'left' | 'right') => {
-    setCurrentIndex(prev => {
-      if (direction === 'left') {
-        return Math.min(prev + 1, maxIndex);
-      } else {
-        return Math.max(prev - 1, 0);
-      }
-    });
-  }, [maxIndex]);
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  }, []);
 
   const handleCategoryClick = (categoryId: number) => {
     router.push('/category/' + categoryId);
   };
 
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-    
-    if (isLeftSwipe) {
-      scroll('left');
-    } else if (isRightSwipe) {
-      scroll('right');
-    }
+  const addToRefs = (el: HTMLDivElement | null, index: number) => {
+    if (el) cardsRef.current[index] = el;
   };
 
   if (loading) {
     return (
-      <div className="py-4 md:py-6">
+      <section className="py-4 md:py-6 overflow-hidden">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-full bg-gray-200 w-9 h-9 animate-pulse"></div>
-              <div className="p-2 rounded-full bg-gray-200 w-9 h-9 animate-pulse"></div>
-            </div>
+          <div className="flex items-center justify-end mb-6 gap-3">
+            <div className="p-3 rounded-full bg-gray-200 w-11 h-11 animate-pulse"></div>
+            <div className="p-3 rounded-full bg-gray-200 w-11 h-11 animate-pulse"></div>
           </div>
           <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4 lg:gap-6">
             {[...Array(7)].map((_, i) => (
               <div key={i} className="flex flex-col items-center animate-pulse">
-                <div className="w-full aspect-square rounded-2xl bg-gray-200 mb-2 md:mb-3"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="w-full aspect-square rounded-3xl bg-gray-200 mb-3 md:mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   if (categories.length === 0) {
-    return null;
+    return (
+      <section className="py-4 md:py-6">
+        <div className="container mx-auto px-4 text-center text-gray-500">
+          لا توجد فئات
+        </div>
+      </section>
+    );
   }
 
-  const visibleCategories = categories.slice(currentIndex, currentIndex + itemsPerView);
-
   return (
-    <div className="py-4 md:py-6">
+    <section ref={sectionRef} className="py-4 md:py-6 overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => scroll('right')}
-              disabled={currentIndex === 0}
-              className="p-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => scroll('left')}
-              disabled={currentIndex >= maxIndex}
-              className="p-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-          </div>
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-end mb-6 gap-3">
+          <button
+            onClick={() => scroll('left')}
+            className="p-3 rounded-full bg-white shadow-lg hover:bg-[#d4af37] hover:text-white transition-all duration-300 hover:scale-110"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="p-3 rounded-full bg-white shadow-lg hover:bg-[#d4af37] hover:text-white transition-all duration-300 hover:scale-110"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div
-            ref={containerRef}
-            className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4 lg:gap-6 transition-all duration-500 ease-in-out"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            {visibleCategories.map((category) => (
-              <div
-                key={category.id}
-                className="flex flex-col items-center cursor-pointer group"
-                onClick={() => handleCategoryClick(category.id)}
-              >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl transition-all duration-300 mb-2 md:mb-3 bg-white">
+        {/* Categories Horizontal Scroll */}
+        <div
+          ref={scrollRef}
+          className="flex gap-4 md:gap-6 overflow-x-auto pb-4 scrollbar-hide"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+          }}
+        >
+          {categories.map((category, index) => (
+            <div
+              key={category.id}
+              ref={(el) => addToRefs(el, index)}
+              className="flex-shrink-0 w-[calc(25%-12px)] sm:w-[calc(25%-12px)] md:w-[calc(20%-16px)] lg:w-[calc(14.28%-20px)]"
+              onClick={() => handleCategoryClick(category.id)}
+            >
+              <div className="group cursor-pointer">
+                <div className="relative aspect-square rounded-3xl bg-white mb-3 md:mb-4 overflow-hidden shadow-lg group-hover:shadow-2xl transition-all duration-500">
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-[#d4af37]/0 group-hover:bg-[#d4af37]/10 transition-colors duration-500 z-10" />
+
                   {category.image_url ? (
                     <Image
-                      src={'http://localhost:3000' + category.image_url}
+                      src={`${API_URL}${category.image_url}`}
                       alt={category.name}
-                      width={120}
-                      height={120}
+                      fill
                       unoptimized
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#d4af37] to-[#b8962e] flex items-center justify-center">
-                      <span className="text-white text-xl md:text-2xl font-bold">
+                    <div className="h-full flex items-center justify-center bg-gradient-to-br from-[#d4af37] to-[#b8962e]">
+                      <span className="text-4xl md:text-5xl lg:text-6xl group-hover:scale-125 transition-transform duration-500 text-white font-bold">
                         {category.name.charAt(0)}
                       </span>
                     </div>
                   )}
                 </div>
-                <span className="text-[10px] sm:text-xs md:text-sm font-medium text-[#2c2c2c] text-center line-clamp-2 group-hover:text-[#d4af37] transition-colors">
+                <h3 className="text-center text-xs sm:text-sm md:text-base lg:text-lg font-bold text-gray-800 group-hover:text-[#d4af37] transition-colors duration-300 line-clamp-2">
                   {category.name}
-                </span>
+                </h3>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </section>
   );
 }

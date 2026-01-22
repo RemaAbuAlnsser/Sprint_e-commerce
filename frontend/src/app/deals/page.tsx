@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -42,8 +43,8 @@ export default function DealsPage() {
   useEffect(() => {
     const fetchDeals = async () => {
       try {
-        console.log('Fetching deals from: http://localhost:3000/products/deals');
-        const response = await fetch('http://localhost:3000/products/deals');
+        console.log('Fetching deals from: http://104.234.26.192:3000/products/deals');
+        const response = await fetch('http://104.234.26.192:3000/products/deals');
         console.log('Response status:', response.status);
         console.log('Response ok:', response.ok);
         
@@ -212,14 +213,14 @@ export default function DealsPage() {
                     {product.image_url ? (
                       <>
                         <Image
-                          src={`http://localhost:3000${product.image_url}`}
+                          src={`http://104.234.26.192:3000${product.image_url}`}
                           alt={product.name}
                           fill
                           className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                         />
                         {product.hover_image_url && (
                           <Image
-                            src={`http://localhost:3000${product.hover_image_url}`}
+                            src={`http://104.234.26.192:3000${product.hover_image_url}`}
                             alt={product.name}
                             fill
                             className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}

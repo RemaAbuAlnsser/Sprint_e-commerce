@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -62,7 +63,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:3000/categories');
+      const response = await fetch('http://104.234.26.192:3000/categories');
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -73,7 +74,7 @@ export default function CategoriesPage() {
 
   const fetchSubcategories = async (categoryId: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/subcategories/category/${categoryId}`);
+      const response = await fetch(`http://104.234.26.192:3000/subcategories/category/${categoryId}`);
       const data = await response.json();
       setSubcategories(prev => ({
         ...prev,
@@ -118,7 +119,7 @@ export default function CategoriesPage() {
       image_url: subcategory.image_url || '',
     });
     if (subcategory.image_url) {
-      setImagePreview(`http://localhost:3000${subcategory.image_url}`);
+      setImagePreview(`http://104.234.26.192:3000${subcategory.image_url}`);
     }
     setIsSubModalOpen(true);
   };
@@ -136,7 +137,7 @@ export default function CategoriesPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://localhost:3000/upload/subcategory-image', {
+        const response = await fetch('http://104.234.26.192:3000/upload/subcategory-image', {
           method: 'POST',
           body: formDataUpload,
         });
@@ -157,8 +158,8 @@ export default function CategoriesPage() {
 
     try {
       const url = editingSubcategory
-        ? `http://localhost:3000/subcategories/${editingSubcategory.id}`
-        : 'http://localhost:3000/subcategories';
+        ? `http://104.234.26.192:3000/subcategories/${editingSubcategory.id}`
+        : 'http://104.234.26.192:3000/subcategories';
       
       const method = editingSubcategory ? 'PUT' : 'POST';
 
@@ -196,7 +197,7 @@ export default function CategoriesPage() {
     if (!confirm('هل أنت متأكد من حذف هذه الفئة الفرعية؟')) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/subcategories/${id}`, {
+      const response = await fetch(`http://104.234.26.192:3000/subcategories/${id}`, {
         method: 'DELETE',
       });
 
@@ -227,7 +228,7 @@ export default function CategoriesPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://localhost:3000/upload/category-image', {
+        const response = await fetch('http://104.234.26.192:3000/upload/category-image', {
           method: 'POST',
           body: formDataUpload,
         });
@@ -250,7 +251,7 @@ export default function CategoriesPage() {
       image_url: category.image_url || '',
     });
     if (category.image_url) {
-      setImagePreview(`http://localhost:3000${category.image_url}`);
+      setImagePreview(`http://104.234.26.192:3000${category.image_url}`);
     }
     setIsModalOpen(true);
   };
@@ -261,8 +262,8 @@ export default function CategoriesPage() {
 
     try {
       const url = editingCategory
-        ? `http://localhost:3000/categories/${editingCategory.id}`
-        : 'http://localhost:3000/categories';
+        ? `http://104.234.26.192:3000/categories/${editingCategory.id}`
+        : 'http://104.234.26.192:3000/categories';
       
       const method = editingCategory ? 'PUT' : 'POST';
 
@@ -298,7 +299,7 @@ export default function CategoriesPage() {
     if (!confirm('هل أنت متأكد من حذف هذه الفئة؟')) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/categories/${id}`, {
+      const response = await fetch(`http://104.234.26.192:3000/categories/${id}`, {
         method: 'DELETE',
       });
 
@@ -342,7 +343,7 @@ export default function CategoriesPage() {
                 <div className="w-16 h-16 md:w-24 md:h-24 rounded-lg bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] flex items-center justify-center flex-shrink-0">
                   {category.image_url ? (
                     <img
-                      src={`http://localhost:3000${category.image_url}`}
+                      src={`http://104.234.26.192:3000${category.image_url}`}
                       alt={category.name}
                       className="w-full h-full object-cover rounded-lg"
                     />
@@ -421,7 +422,7 @@ export default function CategoriesPage() {
                           <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] flex items-center justify-center flex-shrink-0">
                             {sub.image_url ? (
                               <img
-                                src={`http://localhost:3000${sub.image_url}`}
+                                src={`http://104.234.26.192:3000${sub.image_url}`}
                                 alt={sub.name}
                                 className="w-full h-full object-cover rounded-lg"
                               />

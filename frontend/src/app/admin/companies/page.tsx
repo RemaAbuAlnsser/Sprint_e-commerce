@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import {
@@ -35,7 +36,7 @@ export default function CompaniesPage() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('http://localhost:3000/companies');
+      const response = await fetch('http://104.234.26.192:3000/companies');
       const data = await response.json();
       setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -57,7 +58,7 @@ export default function CompaniesPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://localhost:3000/upload/company-logo', {
+        const response = await fetch('http://104.234.26.192:3000/upload/company-logo', {
           method: 'POST',
           body: formDataUpload,
         });
@@ -79,7 +80,7 @@ export default function CompaniesPage() {
       logo_url: company.logo_url || '',
     });
     if (company.logo_url) {
-      setImagePreview(`http://localhost:3000${company.logo_url}`);
+      setImagePreview(`http://104.234.26.192:3000${company.logo_url}`);
     }
     setIsModalOpen(true);
   };
@@ -90,8 +91,8 @@ export default function CompaniesPage() {
 
     try {
       const url = editingCompany
-        ? `http://localhost:3000/companies/${editingCompany.id}`
-        : 'http://localhost:3000/companies';
+        ? `http://104.234.26.192:3000/companies/${editingCompany.id}`
+        : 'http://104.234.26.192:3000/companies';
       
       const method = editingCompany ? 'PUT' : 'POST';
 
@@ -127,7 +128,7 @@ export default function CompaniesPage() {
     if (!confirm('هل أنت متأكد من حذف هذه الشركة؟')) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/companies/${id}`, {
+      const response = await fetch(`http://104.234.26.192:3000/companies/${id}`, {
         method: 'DELETE',
       });
 
@@ -170,7 +171,7 @@ export default function CompaniesPage() {
               {company.logo_url ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <img
-                    src={`http://localhost:3000${company.logo_url}`}
+                    src={`http://104.234.26.192:3000${company.logo_url}`}
                     alt={company.name}
                     className="max-w-full max-h-full object-contain filter group-hover:scale-105 transition-transform duration-300"
                     style={{ maxHeight: '160px' }}

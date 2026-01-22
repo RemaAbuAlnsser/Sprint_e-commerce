@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -45,7 +46,7 @@ export default function NewProductsPage() {
   useEffect(() => {
     const fetchNewProducts = async () => {
       try {
-        const response = await fetch('http://localhost:3000/products');
+        const response = await fetch('http://104.234.26.192:3000/products');
         if (response.ok) {
           const allProductsData = await response.json();
           // Filter products added within the last week
@@ -89,7 +90,7 @@ export default function NewProductsPage() {
 
   const fetchCompanyDetails = async (companyId: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/companies/${companyId}`);
+      const response = await fetch(`http://104.234.26.192:3000/companies/${companyId}`);
       if (response.ok) {
         return await response.json();
       }
@@ -206,7 +207,7 @@ export default function NewProductsPage() {
                     >
                       {company.logo_url && (
                         <img
-                          src={`http://localhost:3000${company.logo_url}`}
+                          src={`http://104.234.26.192:3000${company.logo_url}`}
                           alt={company.name}
                           className="w-6 h-6 object-contain rounded"
                         />
@@ -250,7 +251,7 @@ export default function NewProductsPage() {
                         {product.image_url ? (
                           <>
                             <Image
-                              src={`http://localhost:3000${product.image_url}`}
+                              src={`http://104.234.26.192:3000${product.image_url}`}
                               alt={product.name}
                               fill
                               unoptimized
@@ -258,7 +259,7 @@ export default function NewProductsPage() {
                             />
                             {product.hover_image_url && (
                               <Image
-                                src={`http://localhost:3000${product.hover_image_url}`}
+                                src={`http://104.234.26.192:3000${product.hover_image_url}`}
                                 alt={product.name}
                                 fill
                                 unoptimized

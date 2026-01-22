@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import {
@@ -42,11 +43,11 @@ export default function DashboardPage() {
   const fetchStats = async () => {
     setIsLoading(true);
     try {
-      const productsRes = await fetch('http://localhost:3000/products');
+      const productsRes = await fetch('http://104.234.26.192:3000/products');
       const products = await productsRes.json();
       const productsCount = Array.isArray(products) ? products.length : 0;
 
-      const ordersRes = await fetch('http://localhost:3000/orders');
+      const ordersRes = await fetch('http://104.234.26.192:3000/orders');
       const orders = await ordersRes.json();
       const ordersArray = Array.isArray(orders) ? orders : [];
       const ordersCount = ordersArray.length;
@@ -54,7 +55,7 @@ export default function DashboardPage() {
         .filter((order: any) => order.status === 'completed')
         .reduce((sum: number, order: any) => sum + Number(order.total_amount), 0);
 
-      const categoriesRes = await fetch('http://localhost:3000/categories');
+      const categoriesRes = await fetch('http://104.234.26.192:3000/categories');
       const categoriesData = await categoriesRes.json();
       const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
       
@@ -62,7 +63,7 @@ export default function DashboardPage() {
       const categoriesWithSubs = await Promise.all(
         categoriesArray.map(async (category: Category) => {
           try {
-            const subsRes = await fetch(`http://localhost:3000/subcategories/category/${category.id}`);
+            const subsRes = await fetch(`http://104.234.26.192:3000/subcategories/category/${category.id}`);
             const subs = await subsRes.json();
             const subsArray = Array.isArray(subs) ? subs : [];
             totalSubcategories += subsArray.length;

@@ -1,3 +1,4 @@
+import { API_URL } from '@/lib/api';
 import { useState, useCallback } from 'react';
 import gsap from 'gsap';
 
@@ -35,7 +36,7 @@ export const useFlyingAnimation = () => {
     flyingProduct.style.height = '60px';
     
     const flyingImage = document.createElement('img');
-    flyingImage.src = `http://localhost:3000${currentImageUrl}`;
+    flyingImage.src = `http://104.234.26.192:3000${currentImageUrl}`;
     flyingImage.className = 'w-full h-full object-cover rounded-lg shadow-lg';
     flyingProduct.appendChild(flyingImage);
     

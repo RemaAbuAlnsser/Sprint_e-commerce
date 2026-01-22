@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -48,8 +49,8 @@ export default function SubcategoryPage() {
         console.log('Fetching subcategory:', subcategoryId);
 
         const [subcategoryRes, productsRes] = await Promise.all([
-          fetch(`http://localhost:3000/subcategories/${subcategoryId}`),
-          fetch(`http://localhost:3000/products/subcategory/${subcategoryId}`)
+          fetch(`http://104.234.26.192:3000/subcategories/${subcategoryId}`),
+          fetch(`http://104.234.26.192:3000/products/subcategory/${subcategoryId}`)
         ]);
 
         if (subcategoryRes.ok) {
@@ -227,14 +228,14 @@ export default function SubcategoryPage() {
                     {product.image_url ? (
                       <>
                         <Image
-                          src={`http://localhost:3000${product.image_url}`}
+                          src={`http://104.234.26.192:3000${product.image_url}`}
                           alt={product.name}
                           fill
                           className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                         />
                         {product.hover_image_url && (
                           <Image
-                            src={`http://localhost:3000${product.hover_image_url}`}
+                            src={`http://104.234.26.192:3000${product.hover_image_url}`}
                             alt={product.name}
                             fill
                             className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}

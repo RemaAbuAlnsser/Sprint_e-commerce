@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import {
@@ -47,7 +48,7 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:3000/orders');
+      const response = await fetch('http://104.234.26.192:3000/orders');
       const data = await response.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -79,7 +80,7 @@ export default function OrdersPage() {
     if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/orders/${id}`, {
+      const response = await fetch(`http://104.234.26.192:3000/orders/${id}`, {
         method: 'DELETE',
       });
 
@@ -95,7 +96,7 @@ export default function OrdersPage() {
 
   const handleStatusChange = async (id: number, newStatus: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/orders/${id}/status`, {
+      const response = await fetch(`http://104.234.26.192:3000/orders/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

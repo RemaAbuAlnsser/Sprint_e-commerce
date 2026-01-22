@@ -7,9 +7,12 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('upload')
 export class UploadController {
+  @Public()
   @Post('category-image')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -46,6 +49,7 @@ export class UploadController {
     };
   }
 
+  @Public()
   @Post('company-logo')
   @UseInterceptors(
     FileInterceptor('image', {

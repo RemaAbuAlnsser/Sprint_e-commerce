@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import {
@@ -27,7 +28,7 @@ export default function SettingsPage() {
 
   const loadSettings = async () => {
     try {
-      const response = await fetch('http://localhost:3000/settings');
+      const response = await fetch('http://104.234.26.192:3000/settings');
       const data = await response.json();
       
       // Load site images (assuming backend returns array)
@@ -55,7 +56,7 @@ export default function SettingsPage() {
           formData.append('image', file);
 
           try {
-            const response = await fetch('http://localhost:3000/upload/category-image', {
+            const response = await fetch('http://104.234.26.192:3000/upload/category-image', {
               method: 'POST',
               body: formData,
             });
@@ -88,7 +89,7 @@ export default function SettingsPage() {
       formData.append('image', file);
 
       try {
-        const response = await fetch('http://localhost:3000/upload/company-logo', {
+        const response = await fetch('http://104.234.26.192:3000/upload/company-logo', {
           method: 'POST',
           body: formData,
         });
@@ -117,7 +118,7 @@ export default function SettingsPage() {
         updateData.site_logo = newLogo;
       }
 
-      const response = await fetch('http://localhost:3000/settings', {
+      const response = await fetch('http://104.234.26.192:3000/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +193,7 @@ export default function SettingsPage() {
                   {currentSiteImages.map((image, index) => (
                     <div key={index} className="relative group">
                       <img
-                        src={`http://localhost:3000${image.url}`}
+                        src={`http://104.234.26.192:3000${image.url}`}
                         alt={`Site Image ${index + 1}`}
                         className="w-full h-48 object-cover rounded-lg border-2 border-[#e8e8c8]"
                       />
@@ -311,7 +312,7 @@ export default function SettingsPage() {
                     <div className="relative">
                       <div className="bg-white p-4 rounded-lg flex items-center justify-center h-64">
                         <img
-                          src={`http://localhost:3000${currentLogo}`}
+                          src={`http://104.234.26.192:3000${currentLogo}`}
                           alt="Current Logo"
                           className="max-w-full max-h-full object-contain"
                         />

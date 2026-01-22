@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import gsap from 'gsap';
@@ -23,7 +24,7 @@ const CategoriesGrid = memo(function CategoriesGrid() {
     const fetchCategories = async () => {
       try {
         console.log('Fetching categories for grid...');
-        const response = await fetch('http://localhost:3000/categories');
+        const response = await fetch('http://104.234.26.192:3000/categories');
         if (response.ok) {
           const data = await response.json();
           console.log('Categories for grid:', data.length);
@@ -119,7 +120,7 @@ const CategoriesGrid = memo(function CategoriesGrid() {
                 <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200" style={{ minHeight: '150px' }}>
                   {category.image_url ? (
                     <Image
-                      src={`http://localhost:3000${category.image_url}`}
+                      src={`http://104.234.26.192:3000${category.image_url}`}
                       alt={category.name}
                       fill
                       unoptimized

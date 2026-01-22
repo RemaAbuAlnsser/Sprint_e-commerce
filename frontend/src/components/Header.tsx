@@ -8,6 +8,7 @@ import MegaMenu from './MegaMenu';
 import SearchDropdown from './SearchDropdown';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/api';
 
 interface Category {
   id: number;
@@ -23,6 +24,7 @@ const Header = memo(function Header() {
   const iconsRef = useRef<HTMLDivElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [siteLogo, setSiteLogo] = useState<string | null>(null);
+  const [siteName, setSiteName] = useState<string>('متجر Sprint');
   const [loading, setLoading] = useState(true);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -35,10 +37,11 @@ const Header = memo(function Header() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('http://localhost:3000/settings');
+        const response = await fetch(`${API_URL}/settings`);
         if (response.ok) {
           const data = await response.json();
-          setSiteLogo(data.site_logo);
+          setSiteLogo(`${API_URL}${data.site_logo}`);
+          if (data.site_name) setSiteName(data.site_name);
         }
       } catch (error) {
         console.error('Error fetching settings:', error);
@@ -49,7 +52,7 @@ const Header = memo(function Header() {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/categories');
+        const response = await fetch(`${API_URL}/categories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -152,7 +155,7 @@ const Header = memo(function Header() {
             <div className="w-12 h-12 bg-[#2c2c2c] rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
               {!loading && siteLogo ? (
                 <Image
-                  src={`http://localhost:3000${siteLogo}`}
+                  src={`http://104.234.26.192:3000${siteLogo}`}
                   alt="Site Logo"
                   width={48}
                   height={48}
@@ -164,7 +167,7 @@ const Header = memo(function Header() {
               )}
             </div>
             <div className="flex flex-col text-right">
-              <span className="text-xl font-bold text-[#2c2c2c] leading-tight">متجر Sprint</span>
+              <span className="text-xl font-bold text-[#2c2c2c] leading-tight">{siteName}</span>
               <span className="text-xs text-[#666]">متجرك الموثوق</span>
             </div>
           </div>
@@ -230,24 +233,6 @@ const Header = memo(function Header() {
               onMouseLeave={handleHoverOut}
             >
               العروض
-              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              من نحن
-              <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="#"
-              className="text-[#2c2c2c] hover:text-[#666] transition-colors font-medium text-sm relative group"
-              onMouseEnter={handleHover}
-              onMouseLeave={handleHoverOut}
-            >
-              تواصل معنا
               <span className="absolute bottom-0 right-0 w-0 h-0.5 bg-[#2c2c2c] transition-all duration-300 group-hover:w-full"></span>
             </a>
           </nav>

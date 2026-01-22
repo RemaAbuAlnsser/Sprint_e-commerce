@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [siteName, setSiteName] = useState('Sprint Store');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -19,6 +21,18 @@ export default function LoginPage() {
   const decorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // تحميل اسم الموقع من API
+    const loadSiteName = async () => {
+      try {
+        const response = await fetch('http://104.234.26.192:3000/settings');
+        const data = await response.json();
+        if (data.site_name) setSiteName(data.site_name);
+      } catch (error) {
+        console.error('Error loading site name:', error);
+      }
+    };
+    loadSiteName();
+
     const ctx = gsap.context(() => {
       gsap.from(decorRef.current, {
         scale: 0,
@@ -103,7 +117,7 @@ export default function LoginPage() {
             ref={titleRef}
             className="text-5xl font-bold text-[#2c2c2c] mb-2 drop-shadow-sm"
           >
-            Sprint Store
+            {siteName}
           </h1>
           <p className="text-[#8b7355] text-lg">لوحة التحكم</p>
         </div>
@@ -222,7 +236,7 @@ export default function LoginPage() {
 
         <div className="text-center mt-6">
           <p className="text-[#8b7355] text-sm">
-            © 2026 Sprint Store. جميع الحقوق محفوظة
+            © 2026 {siteName}. جميع الحقوق محفوظة
           </p>
         </div>
       </div>

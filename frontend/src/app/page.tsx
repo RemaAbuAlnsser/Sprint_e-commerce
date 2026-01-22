@@ -9,6 +9,7 @@ import CategorySection from '@/components/CategorySection';
 import CategoriesMenu from '@/components/CategoriesMenu';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
+import { API_URL } from '@/lib/api';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -36,7 +37,7 @@ export default function Home() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('http://localhost:3000/settings');
+        const response = await fetch(`${API_URL}/settings`);
         if (response.ok) {
           const data = await response.json();
           if (data.site_images && data.site_images.length > 0) {
@@ -53,7 +54,7 @@ export default function Home() {
     const fetchCategories = async () => {
       try {
         console.log('Fetching categories from API...');
-        const response = await fetch('http://localhost:3000/categories');
+        const response = await fetch(`${API_URL}/categories`);
         console.log('Categories response status:', response.status);
         if (response.ok) {
           const data = await response.json();
@@ -144,7 +145,7 @@ export default function Home() {
       <main>
         <section
           ref={heroRef}
-          className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 to-black"
+          className="relative h-[60vh] md:h-[80vh] lg:h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 to-black"
         >
           {/* Background Images Slider */}
           {siteImages.length > 0 ? (
@@ -157,7 +158,7 @@ export default function Home() {
                   }`}
                 >
                   <Image
-                    src={`http://localhost:3000${image.image_url}`}
+                    src={`${API_URL}${image.image_url}`}
                     alt={`Slide ${index + 1}`}
                     fill
                     className="object-cover"
@@ -177,22 +178,22 @@ export default function Home() {
             <>
               <button
                 onClick={prevSlide}
-                className="absolute right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-300 group"
+                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-300 group"
                 aria-label="Previous slide"
               >
-                <ChevronRight className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white group-hover:scale-110 transition-transform" />
               </button>
 
               <button
                 onClick={nextSlide}
-                className="absolute left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-300 group"
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-300 group"
                 aria-label="Next slide"
               >
-                <ChevronLeft className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white group-hover:scale-110 transition-transform" />
               </button>
 
               {/* Modern Dots Indicator */}
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+              <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 md:gap-3 z-30">
                 {siteImages.map((_, index) => (
                   <button
                     key={index}
@@ -210,7 +211,7 @@ export default function Home() {
           )}
 
           {/* Scroll Indicator */}
-          <div className="absolute bottom-8 right-8 z-30 animate-bounce">
+          <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 z-30 animate-bounce hidden md:block">
             <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
               <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse"></div>
             </div>

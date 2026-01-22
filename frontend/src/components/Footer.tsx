@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, memo } from 'react';
+import { useEffect, useRef, memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, MessageCircle, Mail, Phone, MapPin } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -16,10 +17,42 @@ const Footer = memo(function Footer() {
   const topSectionRef = useRef<HTMLDivElement>(null);
   const bottomSectionRef = useRef<HTMLDivElement>(null);
   const socialIconsRef = useRef<HTMLDivElement>(null);
+  
+  const [settings, setSettings] = useState({
+    site_name: 'متجر Sprint',
+    site_description: 'نقدم لكم أفضل المنتجات بأعلى جودة وأفضل الأسعار',
+    contact_email: 'info@sprint-store.com',
+    contact_phone: '+972 123 456 789',
+    address: 'فلسطين، رام الله',
+    facebook_url: '',
+    instagram_url: '',
+    whatsapp_url: '',
+    site_logo: ''
+  });
 
   useEffect(() => {
-    // تم إزالة الرسوم المتحركة لتحسين CLS
-    // العناصر تظهر مباشرة بدون تحولات في التخطيط
+    // تحميل الإعدادات من API
+    const loadSettings = async () => {
+      try {
+        const response = await fetch(`${API_URL}/settings`);
+        const data = await response.json();
+        setSettings({
+          site_name: data.site_name || 'متجر Sprint',
+          site_description: data.site_description || 'نقدم لكم أفضل المنتجات بأعلى جودة وأفضل الأسعار',
+          contact_email: data.contact_email || 'info@sprint-store.com',
+          contact_phone: data.contact_phone || '+972 123 456 789',
+          address: data.address || 'فلسطين، رام الله',
+          facebook_url: data.facebook_url || '',
+          instagram_url: data.instagram_url || '',
+          whatsapp_url: data.whatsapp_url || '',
+          site_logo: data.site_logo || ''
+        });
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+    
+    loadSettings();
   }, []);
 
   const handleIconHover = (e: React.MouseEvent<HTMLElement>) => {
@@ -65,15 +98,21 @@ const Footer = memo(function Footer() {
           <div className="footer-column text-right">
             <div className="flex items-center gap-3 mb-6 justify-end">
               <div className="flex flex-col text-right">
-                <span className="text-2xl font-bold text-white leading-tight">متجر Sprint</span>
+                <span className="text-2xl font-bold text-white leading-tight">{settings.site_name}</span>
                 <span className="text-sm text-gray-400">متجرك الموثوق</span>
               </div>
-              <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-2xl font-bold text-[#2c2c2c]">S</span>
-              </div>
+              {settings.site_logo ? (
+                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
+                  <img src={`http://104.234.26.192:3000${settings.site_logo}`} alt={settings.site_name} className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-2xl font-bold text-[#2c2c2c]">S</span>
+                </div>
+              )}
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              نقدم لكم أفضل المنتجات بأعلى جودة وأفضل الأسعار. تسوق بثقة وراحة من منزلك.
+              {settings.site_description}
             </p>
           </div>
 
@@ -172,48 +211,70 @@ const Footer = memo(function Footer() {
           <div className="footer-column text-right">
             <h3 className="text-lg font-bold mb-4 text-white">تواصل معنا</h3>
             <ul className="space-y-3">
-              <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
-                <span>info@sprint-store.com</span>
-                <Mail size={18} className="text-[#d4af37]" />
-              </li>
-              <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
-                <span dir="ltr">+972 123 456 789</span>
-                <Phone size={18} className="text-[#d4af37]" />
-              </li>
-              <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
-                <span>فلسطين، رام الله</span>
-                <MapPin size={18} className="text-[#d4af37]" />
-              </li>
+              {settings.contact_email && (
+                <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
+                  <a href={`mailto:${settings.contact_email}`} className="hover:text-[#d4af37] transition-colors">
+                    {settings.contact_email}
+                  </a>
+                  <Mail size={18} className="text-[#d4af37]" />
+                </li>
+              )}
+              {settings.contact_phone && (
+                <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
+                  <a href={`tel:${settings.contact_phone}`} className="hover:text-[#d4af37] transition-colors" dir="ltr">
+                    {settings.contact_phone}
+                  </a>
+                  <Phone size={18} className="text-[#d4af37]" />
+                </li>
+              )}
+              {settings.address && (
+                <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
+                  <span>{settings.address}</span>
+                  <MapPin size={18} className="text-[#d4af37]" />
+                </li>
+              )}
             </ul>
 
             <div ref={socialIconsRef} className="flex items-center gap-3 mt-6 justify-end">
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/10 hover:bg-[#d4af37] rounded-full flex items-center justify-center transition-colors"
-                onMouseEnter={handleIconHover}
-                onMouseLeave={handleIconHoverOut}
-                aria-label="Twitter"
-              >
-                <Twitter size={18} />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/10 hover:bg-[#d4af37] rounded-full flex items-center justify-center transition-colors"
-                onMouseEnter={handleIconHover}
-                onMouseLeave={handleIconHoverOut}
-                aria-label="Instagram"
-              >
-                <Instagram size={18} />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/10 hover:bg-[#d4af37] rounded-full flex items-center justify-center transition-colors"
-                onMouseEnter={handleIconHover}
-                onMouseLeave={handleIconHoverOut}
-                aria-label="Facebook"
-              >
-                <Facebook size={18} />
-              </a>
+              {settings.whatsapp_url && (
+                <a
+                  href={settings.whatsapp_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-white/10 hover:bg-[#25D366] rounded-full flex items-center justify-center transition-colors"
+                  onMouseEnter={handleIconHover}
+                  onMouseLeave={handleIconHoverOut}
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle size={18} />
+                </a>
+              )}
+              {settings.instagram_url && (
+                <a
+                  href={settings.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-white/10 hover:bg-[#E4405F] rounded-full flex items-center justify-center transition-colors"
+                  onMouseEnter={handleIconHover}
+                  onMouseLeave={handleIconHoverOut}
+                  aria-label="Instagram"
+                >
+                  <Instagram size={18} />
+                </a>
+              )}
+              {settings.facebook_url && (
+                <a
+                  href={settings.facebook_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-white/10 hover:bg-[#1877F2] rounded-full flex items-center justify-center transition-colors"
+                  onMouseEnter={handleIconHover}
+                  onMouseLeave={handleIconHoverOut}
+                  aria-label="Facebook"
+                >
+                  <Facebook size={18} />
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -230,7 +291,7 @@ const Footer = memo(function Footer() {
               </a>
             </div>
             <p className="text-sm text-gray-400">
-              © 2026 متجر Sprint. جميع الحقوق محفوظة.
+              © 2026 {settings.site_name}. جميع الحقوق محفوظة.
             </p>
           </div>
         </div>

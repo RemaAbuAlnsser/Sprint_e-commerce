@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +31,7 @@ export default function CategoriesList() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/categories/with-subcategories');
+        const response = await fetch('http://104.234.26.192:3000/categories/with-subcategories');
         if (response.ok) {
           const data = await response.json();
           setCategories(data);

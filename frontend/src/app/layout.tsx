@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo, Tajawal, Amiri } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -41,6 +42,7 @@ export default function RootLayout({
       >
         <CartProvider>
           {children}
+          <WhatsAppButton />
         </CartProvider>
       </body>
     </html>

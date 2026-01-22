@@ -13,6 +13,7 @@ import {
   LogOut,
   Store,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 export default function AdminLayout({
   children,
@@ -24,9 +25,22 @@ export default function AdminLayout({
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [siteName, setSiteName] = useState('Sprint Store');
 
   useEffect(() => {
     setMounted(true);
+    
+    // تحميل اسم الموقع من API
+    const loadSiteName = async () => {
+      try {
+        const response = await fetch(`${API_URL}/settings`);
+        const data = await response.json();
+        if (data.site_name) setSiteName(data.site_name);
+      } catch (error) {
+        console.error('Error loading site name:', error);
+      }
+    };
+    loadSiteName();
   }, []);
 
   const isLoginPage = pathname === '/admin';
@@ -71,7 +85,7 @@ export default function AdminLayout({
               <ChevronRight size={24} />
             </button>
             <div className="text-center flex-1">
-              <h1 className="text-2xl font-bold text-[#2c2c2c]">Sprint Store</h1>
+              <h1 className="text-2xl font-bold text-[#2c2c2c]">{siteName}</h1>
               <p className="text-sm text-[#5E4A45] mt-1">لوحة التحكم</p>
             </div>
           </div>

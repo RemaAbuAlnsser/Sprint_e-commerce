@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '@/lib/api';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -80,9 +81,9 @@ export default function CategoryPage() {
         console.log('Fetching category:', categoryId);
 
         const [categoryRes, productsRes, subcategoriesRes] = await Promise.all([
-          fetch(`http://localhost:3000/categories/${categoryId}`),
-          fetch(`http://localhost:3000/products/category/${categoryId}`),
-          fetch(`http://localhost:3000/subcategories/category/${categoryId}`)
+          fetch(`http://104.234.26.192:3000/categories/${categoryId}`),
+          fetch(`http://104.234.26.192:3000/products/category/${categoryId}`),
+          fetch(`http://104.234.26.192:3000/subcategories/category/${categoryId}`)
         ]);
 
         if (categoryRes.ok) {
@@ -121,7 +122,7 @@ export default function CategoryPage() {
           const companiesData = await Promise.all(
             uniqueCompanyIds.map(async (companyId) => {
               try {
-                const res = await fetch(`http://localhost:3000/companies/${companyId}`);
+                const res = await fetch(`http://104.234.26.192:3000/companies/${companyId}`);
                 if (res.ok) return await res.json();
               } catch (error) {
                 console.error('Error fetching company:', error);
@@ -149,7 +150,7 @@ export default function CategoryPage() {
       // Filter by subcategory
       if (selectedSubcategory) {
         try {
-          const response = await fetch(`http://localhost:3000/products/subcategory/${selectedSubcategory}`);
+          const response = await fetch(`http://104.234.26.192:3000/products/subcategory/${selectedSubcategory}`);
           if (response.ok) {
             filtered = await response.json();
           }
@@ -392,7 +393,7 @@ export default function CategoryPage() {
           {category.image_url ? (
             <>
               <Image
-                src={`http://localhost:3000${category.image_url}`}
+                src={`http://104.234.26.192:3000${category.image_url}`}
                 alt={category.name}
                 fill
                 className="object-cover opacity-30"
@@ -506,7 +507,7 @@ export default function CategoryPage() {
                         }`}>
                           {subcategory.image_url ? (
                             <Image
-                              src={`http://localhost:3000${subcategory.image_url}`}
+                              src={`http://104.234.26.192:3000${subcategory.image_url}`}
                               alt={subcategory.name}
                               width={96}
                               height={96}
@@ -564,7 +565,7 @@ export default function CategoryPage() {
                       >
                         {company.logo_url && (
                           <Image
-                            src={`http://localhost:3000${company.logo_url}`}
+                            src={`http://104.234.26.192:3000${company.logo_url}`}
                             alt={company.name}
                             width={20}
                             height={20}
@@ -612,14 +613,14 @@ export default function CategoryPage() {
                     {product.image_url ? (
                       <>
                         <Image
-                          src={`http://localhost:3000${product.image_url}`}
+                          src={`http://104.234.26.192:3000${product.image_url}`}
                           alt={product.name}
                           fill
                           className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                         />
                         {product.hover_image_url && (
                           <Image
-                            src={`http://localhost:3000${product.hover_image_url}`}
+                            src={`http://104.234.26.192:3000${product.hover_image_url}`}
                             alt={product.name}
                             fill
                             className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}
