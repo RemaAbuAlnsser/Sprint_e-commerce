@@ -67,7 +67,6 @@ export default function CategoriesPage() {
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
       setCategories([]);
     }
   };
@@ -81,7 +80,6 @@ export default function CategoriesPage() {
         [categoryId]: Array.isArray(data) ? data : []
       }));
     } catch (error) {
-      console.error('Error fetching subcategories:', error);
     }
   };
 
@@ -147,7 +145,6 @@ export default function CategoriesPage() {
           setSubFormData({ ...subFormData, image_url: result.imageUrl });
         }
       } catch (error) {
-        console.error('Error uploading image:', error);
       }
     }
   };
@@ -186,7 +183,6 @@ export default function CategoriesPage() {
         alert(editingSubcategory ? 'فشل في تحديث الفئة الفرعية' : 'فشل في إضافة الفئة الفرعية');
       }
     } catch (error) {
-      console.error('Error saving subcategory:', error);
       alert('حدث خطأ أثناء حفظ الفئة الفرعية');
     } finally {
       setIsLoading(false);
@@ -208,7 +204,6 @@ export default function CategoriesPage() {
         await fetchSubcategories(categoryId);
       }
     } catch (error) {
-      console.error('Error deleting subcategory:', error);
       alert('فشل في حذف الفئة الفرعية');
     }
   };
@@ -238,7 +233,6 @@ export default function CategoriesPage() {
           setFormData({ ...formData, image_url: result.imageUrl });
         }
       } catch (error) {
-        console.error('Error uploading image:', error);
       }
     }
   };
@@ -288,7 +282,6 @@ export default function CategoriesPage() {
         alert(editingCategory ? 'فشل في تحديث الفئة' : 'فشل في إضافة الفئة');
       }
     } catch (error) {
-      console.error('Error saving category:', error);
       alert('حدث خطأ أثناء حفظ الفئة');
     } finally {
       setIsLoading(false);
@@ -310,7 +303,6 @@ export default function CategoriesPage() {
         fetchCategories();
       }
     } catch (error) {
-      console.error('Error deleting category:', error);
       alert('فشل في حذف الفئة');
     }
   };

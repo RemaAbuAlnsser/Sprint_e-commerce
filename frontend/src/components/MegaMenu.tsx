@@ -44,7 +44,6 @@ const MegaMenu = memo(function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
           }
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }

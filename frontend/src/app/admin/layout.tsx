@@ -37,7 +37,6 @@ export default function AdminLayout({
         const data = await response.json();
         if (data.site_name) setSiteName(data.site_name);
       } catch (error) {
-        console.error('Error loading site name:', error);
       }
     };
     loadSiteName();

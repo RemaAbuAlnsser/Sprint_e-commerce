@@ -45,7 +45,6 @@ export default function Home() {
           }
         }
       } catch (error) {
-        console.error('Error fetching settings:', error);
       } finally {
         setLoading(false);
       }
@@ -53,19 +52,13 @@ export default function Home() {
 
     const fetchCategories = async () => {
       try {
-        console.log('Fetching categories from API...');
         const response = await fetch(`${API_URL}/categories`);
-        console.log('Categories response status:', response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('Categories data received:', data.length, 'categories');
-          console.log('Categories:', data);
           setCategories(data);
         } else {
-          console.error('Failed to fetch categories:', response.status, response.statusText);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
       } finally {
         setCategoriesLoading(false);
       }

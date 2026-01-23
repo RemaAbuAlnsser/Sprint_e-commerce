@@ -78,7 +78,6 @@ export default function CategoryPage() {
     const fetchCategoryAndProducts = async () => {
       try {
         const categoryId = params.id;
-        console.log('Fetching category:', categoryId);
 
         const [categoryRes, productsRes, subcategoriesRes] = await Promise.all([
           fetch(`${API_URL}/categories/${categoryId}`),
@@ -88,21 +87,18 @@ export default function CategoryPage() {
 
         if (categoryRes.ok) {
           const categoryData = await categoryRes.json();
-          console.log('Category data:', categoryData);
           setCategory(categoryData);
         }
 
         let productsData: Product[] = [];
         if (productsRes.ok) {
           productsData = await productsRes.json();
-          console.log('Products data:', productsData.length, 'products');
           setProducts(productsData);
           setAllProducts(productsData);
         }
 
         if (subcategoriesRes.ok) {
           const subcategoriesData = await subcategoriesRes.json();
-          console.log('Subcategories data:', subcategoriesData);
           setSubcategories(subcategoriesData);
           
           // تفعيل فلتر القسم الفرعي من URL
@@ -125,7 +121,6 @@ export default function CategoryPage() {
                 const res = await fetch(`${API_URL}/companies/${companyId}`);
                 if (res.ok) return await res.json();
               } catch (error) {
-                console.error('Error fetching company:', error);
               }
               return null;
             })
@@ -133,7 +128,6 @@ export default function CategoryPage() {
           setCompanies(companiesData.filter(Boolean));
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -155,7 +149,6 @@ export default function CategoryPage() {
             filtered = await response.json();
           }
         } catch (error) {
-          console.error('Error fetching filtered products:', error);
         }
       }
 

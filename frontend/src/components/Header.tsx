@@ -44,7 +44,6 @@ const Header = memo(function Header() {
           if (data.site_name) setSiteName(data.site_name);
         }
       } catch (error) {
-        console.error('Error fetching settings:', error);
       } finally {
         setLoading(false);
       }
@@ -58,7 +57,6 @@ const Header = memo(function Header() {
           setCategories(data);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
       }
     };
 

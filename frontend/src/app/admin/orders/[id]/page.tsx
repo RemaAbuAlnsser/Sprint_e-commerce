@@ -50,7 +50,6 @@ export default function OrderDetailsPage() {
       const data = await response.json();
       setOrder(data);
     } catch (error) {
-      console.error('Error fetching order details:', error);
     } finally {
       setIsLoading(false);
     }

@@ -79,7 +79,6 @@ export default function NewProductsPage() {
             }, []);
         }
       } catch (error) {
-        console.error('Error fetching new products:', error);
       } finally {
         setLoading(false);
       }
@@ -95,7 +94,6 @@ export default function NewProductsPage() {
         return await response.json();
       }
     } catch (error) {
-      console.error('Error fetching company:', error);
     }
     return null;
   };

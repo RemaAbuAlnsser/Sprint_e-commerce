@@ -52,7 +52,6 @@ export default function OrdersPage() {
       const data = await response.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching orders:', error);
     }
   };
 
@@ -89,7 +88,6 @@ export default function OrdersPage() {
         fetchOrders();
       }
     } catch (error) {
-      console.error('Error deleting order:', error);
       alert('حدث خطأ أثناء حذف الطلب');
     }
   };
@@ -109,7 +107,6 @@ export default function OrdersPage() {
         fetchOrders();
       }
     } catch (error) {
-      console.error('Error updating order status:', error);
       alert('حدث خطأ أثناء تحديث حالة الطلب');
     }
   };

@@ -37,7 +37,6 @@ export default function SettingsPage() {
       }
       setCurrentLogo(data.site_logo || '');
     } catch (error) {
-      console.error('Error loading settings:', error);
     }
   };
 
@@ -66,7 +65,6 @@ export default function SettingsPage() {
               setNewSiteImages(prev => [...prev, { url: result.imageUrl, preview }]);
             }
           } catch (error) {
-            console.error('Error uploading site image:', error);
           }
         };
         
@@ -99,7 +97,6 @@ export default function SettingsPage() {
           setNewLogo(result.imageUrl);
         }
       } catch (error) {
-        console.error('Error uploading logo:', error);
       }
     }
   };
@@ -146,7 +143,6 @@ export default function SettingsPage() {
         alert('حدث خطأ أثناء حفظ الإعدادات');
       }
     } catch (error) {
-      console.error('Error saving settings:', error);
       alert('حدث خطأ أثناء حفظ الإعدادات');
     } finally {
       setIsLoading(false);

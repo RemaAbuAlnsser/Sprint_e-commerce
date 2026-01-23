@@ -23,15 +23,12 @@ const CategoriesGrid = memo(function CategoriesGrid() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        console.log('Fetching categories for grid...');
         const response = await fetch(`${API_URL}/categories`);
         if (response.ok) {
           const data = await response.json();
-          console.log('Categories for grid:', data.length);
           setCategories(data);
         }
       } catch (error) {
-        console.error('Error fetching categories for grid:', error);
       } finally {
         setLoading(false);
       }

@@ -85,7 +85,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       return { success: true };
     } catch (error) {
-      console.error('Error checking product availability:', error);
       return { success: false, message: 'حدث خطأ أثناء التحقق من توفر المنتج' };
     }
   };

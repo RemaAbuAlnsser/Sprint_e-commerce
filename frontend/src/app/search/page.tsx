@@ -94,7 +94,6 @@ function SearchContent() {
           setPopularCategories(data.popular_categories || []);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
       }
     };
     fetchData();
@@ -124,7 +123,6 @@ function SearchContent() {
         localStorage.setItem('recentSearches', JSON.stringify(updated));
       }
     } catch (error) {
-      console.error('Error searching:', error);
     } finally {
       setLoading(false);
     }
@@ -149,7 +147,6 @@ function SearchContent() {
       const data = await res.json();
       setSuggestions(data.suggestions || []);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
     }
   };
 

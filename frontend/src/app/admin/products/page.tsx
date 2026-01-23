@@ -119,7 +119,6 @@ export default function ProductsPage() {
       const colorNames = data.map((item: any) => item.color_name);
       setAvailableColors(colorNames);
     } catch (error) {
-      console.error('Error fetching available colors:', error);
     }
   };
 
@@ -129,7 +128,6 @@ export default function ProductsPage() {
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
     }
   };
 
@@ -139,7 +137,6 @@ export default function ProductsPage() {
       const data = await response.json();
       setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching companies:', error);
     }
   };
 
@@ -149,7 +146,6 @@ export default function ProductsPage() {
       const data = await response.json();
       setSubcategories(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching all subcategories:', error);
       setSubcategories([]);
     }
   };
@@ -165,7 +161,6 @@ export default function ProductsPage() {
       const data = await response.json();
       setSubcategories(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching subcategories:', error);
       setSubcategories([]);
     }
   };
@@ -176,7 +171,6 @@ export default function ProductsPage() {
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching products:', error);
     }
   };
 
@@ -203,7 +197,6 @@ export default function ProductsPage() {
           setFormData({ ...formData, image_url: result.imageUrl });
         }
       } catch (error) {
-        console.error('Error uploading image:', error);
       }
     }
   };
@@ -231,7 +224,6 @@ export default function ProductsPage() {
           setFormData({ ...formData, hover_image_url: result.imageUrl });
         }
       } catch (error) {
-        console.error('Error uploading hover image:', error);
       }
     }
   };
@@ -260,7 +252,6 @@ export default function ProductsPage() {
               setGalleryImages(prev => [...prev, { url: result.imageUrl, preview }]);
             }
           } catch (error) {
-            console.error('Error uploading gallery image:', error);
           }
         };
         
@@ -376,8 +367,6 @@ export default function ProductsPage() {
 
         // Save gallery images
         if (galleryImages.length > 0 && productId) {
-          console.log('Saving gallery images for product:', productId);
-          console.log('Gallery images:', galleryImages);
           
           for (let i = 0; i < galleryImages.length; i++) {
             const imageData = {
@@ -385,7 +374,6 @@ export default function ProductsPage() {
               image_url: galleryImages[i].url,
               display_order: i,
             };
-            console.log('Saving image:', imageData);
             
             const imageResponse = await fetch(`${API_URL}/product-images`, {
               method: 'POST',
@@ -394,16 +382,11 @@ export default function ProductsPage() {
             });
             
             const imageResult = await imageResponse.json();
-            console.log('Image save result:', imageResult);
             
             if (!imageResult.success) {
-              console.error('Failed to save image:', imageResult);
             }
           }
         } else {
-          console.log('No gallery images to save or no productId');
-          console.log('galleryImages.length:', galleryImages.length);
-          console.log('productId:', productId);
         }
         
         setToastMessage(result.message || (editingProduct ? 'تم تحديث المنتج بنجاح!' : 'تم إضافة المنتج بنجاح!'));
@@ -424,7 +407,6 @@ export default function ProductsPage() {
         setShowToast(true);
       }
     } catch (error) {
-      console.error('Error saving product:', error);
       setToastMessage('حدث خطأ أثناء حفظ المنتج');
       setToastType('error');
       setShowToast(true);
@@ -448,7 +430,6 @@ export default function ProductsPage() {
         fetchProducts();
       }
     } catch (error) {
-      console.error('Error deleting product:', error);
       alert('فشل في حذف المنتج');
     }
   };
@@ -459,7 +440,6 @@ export default function ProductsPage() {
       const data = await response.json();
       setProductColors(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching product colors:', error);
       setProductColors([]);
     }
   };
@@ -493,7 +473,6 @@ export default function ProductsPage() {
           setColorFormData({ ...colorFormData, image_url: result.imageUrl });
         }
       } catch (error) {
-        console.error('Error uploading color image:', error);
       }
     }
   };
@@ -533,7 +512,6 @@ export default function ProductsPage() {
               }),
             });
           } catch (error) {
-            console.error('Error saving color gallery image:', error);
           }
         }
 
@@ -548,7 +526,6 @@ export default function ProductsPage() {
         await fetchProducts();
       }
     } catch (error) {
-      console.error('Error saving color:', error);
       setToastMessage('حدث خطأ أثناء حفظ اللون');
       setToastType('error');
       setShowToast(true);
@@ -573,7 +550,6 @@ export default function ProductsPage() {
         }
       }
     } catch (error) {
-      console.error('Error deleting color:', error);
       alert('فشل في حذف اللون');
     }
   };
@@ -1591,7 +1567,6 @@ export default function ProductsPage() {
                                       }
                                     }
                                   } catch (error) {
-                                    console.error('Error uploading color image:', error);
                                   }
                                 }
                               }}
@@ -1845,7 +1820,6 @@ export default function ProductsPage() {
                                   });
                                 }
                               } catch (error) {
-                                console.error('Error uploading image:', error);
                               }
                             }
                             

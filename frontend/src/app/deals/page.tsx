@@ -43,29 +43,21 @@ export default function DealsPage() {
   useEffect(() => {
     const fetchDeals = async () => {
       try {
-        console.log('Fetching deals from: ${API_URL}/products/deals');
         const response = await fetch(`${API_URL}/products/deals`);
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
         
         if (response.ok) {
           const text = await response.text();
-          console.log('Response text:', text);
           
           if (text) {
             const data = JSON.parse(text);
-            console.log('Parsed data:', data);
             setProducts(data);
           } else {
-            console.log('Empty response');
             setProducts([]);
           }
         } else {
-          console.error('Response not ok:', response.status);
           setProducts([]);
         }
       } catch (error) {
-        console.error('Error fetching deals:', error);
         setProducts([]);
       } finally {
         setLoading(false);

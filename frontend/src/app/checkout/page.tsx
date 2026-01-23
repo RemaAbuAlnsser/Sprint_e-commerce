@@ -65,7 +65,6 @@ export default function CheckoutPage() {
         })),
       };
 
-      console.log('Sending order data:', orderData);
 
       const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
@@ -75,19 +74,13 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderData),
       });
 
-      console.log('Response status:', response.status);
       const result = await response.json();
-      console.log('Response data:', result);
 
       if (result.success) {
-        console.log('Order successful! Order ID:', result.orderId);
         setOrderId(result.orderId);
-        console.log('Setting showSuccessModal to true');
         setShowSuccessModal(true);
-        console.log('Clearing cart');
         clearCart();
       } else {
-        console.error('Order failed:', result);
         
         // إذا كانت هناك منتجات غير متوفرة، عرض تفاصيلها
         if (result.unavailableProducts && result.unavailableProducts.length > 0) {
@@ -102,7 +95,6 @@ export default function CheckoutPage() {
         }
       }
     } catch (error: any) {
-      console.error('Error submitting order:', error);
       alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.\nالخطأ: ' + (error?.message || error));
     }
   };
@@ -121,7 +113,6 @@ export default function CheckoutPage() {
     return null;
   }
 
-  console.log('Render - showSuccessModal:', showSuccessModal, 'orderId:', orderId);
 
   return (
     <>
@@ -129,7 +120,6 @@ export default function CheckoutPage() {
         <SuccessModal
           orderId={orderId}
           onClose={() => {
-            console.log('Modal closing');
             setShowSuccessModal(false);
             router.push('/');
           }}

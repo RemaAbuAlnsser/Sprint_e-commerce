@@ -1,5 +1,4 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { DatabaseService } from '../database/database.service';
 import * as bcrypt from 'bcrypt';
 
@@ -7,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private databaseService: DatabaseService,
-    private jwtService: JwtService,
   ) {}
 
   async login(email: string, password: string) {
@@ -25,9 +23,6 @@ export class AuthService {
       throw new UnauthorizedException('كلمة المرور غير صحيحة');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
-    const token = this.jwtService.sign(payload);
-
     return {
       success: true,
       user: {
@@ -36,7 +31,6 @@ export class AuthService {
         name: user.name,
         role: user.role,
       },
-      access_token: token,
     };
   }
 
@@ -59,13 +53,9 @@ export class AuthService {
         'customer',
       ]);
 
-      const payload = { sub: result.insertId, email: data.email, role: 'customer' };
-      const token = this.jwtService.sign(payload);
-
       return {
         success: true,
         message: 'تم التسجيل بنجاح',
-        access_token: token,
         user: {
           id: result.insertId,
           email: data.email,

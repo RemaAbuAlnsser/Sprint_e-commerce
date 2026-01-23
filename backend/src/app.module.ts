@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,7 +15,6 @@ import { SettingsModule } from './settings/settings.module';
 import { ProductColorsModule } from './product-colors/product-colors.module';
 import { ProductImagesModule } from './product-images/product-images.module';
 import { ProductColorImagesModule } from './product-color-images/product-color-images.module';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -42,12 +40,6 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     ProductColorImagesModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

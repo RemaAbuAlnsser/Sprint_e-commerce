@@ -86,7 +86,6 @@ export default function ProductPage() {
       const response = await fetch(`${API_URL}/product-colors/product/${productId}`);
       if (response.ok) {
         const colors = await response.json();
-        console.log('Product colors:', colors);
         setProductColors(colors);
         if (colors.length > 0) {
           setSelectedColor(colors[0]);
@@ -94,7 +93,6 @@ export default function ProductPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching product colors:', error);
     }
   };
 
@@ -103,12 +101,10 @@ export default function ProductPage() {
       const response = await fetch(`${API_URL}/product-color-images/color/${colorId}`);
       if (response.ok) {
         const images = await response.json();
-        console.log('Color images:', images);
         setColorImages(images);
         setSelectedImageIndex(0);
       }
     } catch (error) {
-      console.error('Error fetching color images:', error);
       setColorImages([]);
     }
   };
@@ -116,21 +112,16 @@ export default function ProductPage() {
   const fetchProduct = async () => {
     try {
       setIsLoading(true);
-      console.log('Fetching product with SKU:', productSku);
       
       const response = await fetch(`${API_URL}/products/sku/${productSku}`);
       
       if (response.ok) {
         const productData = await response.json();
-        console.log('Product data:', productData);
-        console.log('Product images:', productData?.images);
         setProduct(productData);
       } else {
-        console.error('Failed to fetch product:', response.status);
         setProduct(null);
       }
     } catch (error) {
-      console.error('Error fetching product:', error);
       setProduct(null);
     } finally {
       setIsLoading(false);
@@ -151,7 +142,6 @@ export default function ProductPage() {
         setRelatedProducts(filtered);
       }
     } catch (error) {
-      console.error('Error fetching related products:', error);
     } finally {
       setLoadingRelated(false);
     }

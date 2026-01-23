@@ -74,7 +74,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching products:', error);
     } finally {
       setIsLoading(false);
     }

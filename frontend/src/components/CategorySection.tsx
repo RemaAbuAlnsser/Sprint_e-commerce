@@ -60,18 +60,13 @@ const CategorySection = memo(function CategorySection({ category, index }: Categ
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        console.log(`Fetching products for category ${category.id}: ${category.name}`);
         const response = await fetch(`${API_URL}/products/category/${category.id}`);
-        console.log(`Response status for category ${category.id}:`, response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log(`Products fetched for category ${category.id}:`, data.length, 'products');
           setProducts(data);
         } else {
-          console.error(`Failed to fetch products for category ${category.id}:`, response.status, response.statusText);
         }
       } catch (error) {
-        console.error(`Error fetching products for category ${category.id}:`, error);
       } finally {
         setLoading(false);
       }

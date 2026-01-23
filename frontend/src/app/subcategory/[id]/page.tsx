@@ -46,7 +46,6 @@ export default function SubcategoryPage() {
     const fetchSubcategoryAndProducts = async () => {
       try {
         const subcategoryId = params.id;
-        console.log('Fetching subcategory:', subcategoryId);
 
         const [subcategoryRes, productsRes] = await Promise.all([
           fetch(`${API_URL}/subcategories/${subcategoryId}`),
@@ -55,20 +54,15 @@ export default function SubcategoryPage() {
 
         if (subcategoryRes.ok) {
           const subcategoryData = await subcategoryRes.json();
-          console.log('Subcategory data:', subcategoryData);
           setSubcategory(subcategoryData);
         }
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          console.log('Products data:', productsData.length, 'products');
-          console.log('Products:', productsData);
           setProducts(productsData);
         } else {
-          console.error('Failed to fetch products:', productsRes.status, productsRes.statusText);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }

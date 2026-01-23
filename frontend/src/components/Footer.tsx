@@ -48,7 +48,6 @@ const Footer = memo(function Footer() {
           site_logo: data.site_logo || ''
         });
       } catch (error) {
-        console.error('Error loading settings:', error);
       }
     };
     

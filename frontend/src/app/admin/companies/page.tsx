@@ -40,7 +40,6 @@ export default function CompaniesPage() {
       const data = await response.json();
       setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching companies:', error);
       setCompanies([]);
     }
   };
@@ -68,7 +67,6 @@ export default function CompaniesPage() {
           setFormData({ ...formData, logo_url: result.imageUrl });
         }
       } catch (error) {
-        console.error('Error uploading logo:', error);
       }
     }
   };
@@ -117,7 +115,6 @@ export default function CompaniesPage() {
         alert(editingCompany ? 'فشل في تحديث الشركة' : 'فشل في إضافة الشركة');
       }
     } catch (error) {
-      console.error('Error saving company:', error);
       alert('حدث خطأ أثناء حفظ الشركة');
     } finally {
       setIsLoading(false);
@@ -139,7 +136,6 @@ export default function CompaniesPage() {
         fetchCompanies();
       }
     } catch (error) {
-      console.error('Error deleting company:', error);
       alert('فشل في حذف الشركة');
     }
   };

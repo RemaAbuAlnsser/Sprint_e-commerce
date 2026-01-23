@@ -44,7 +44,6 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           }
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }

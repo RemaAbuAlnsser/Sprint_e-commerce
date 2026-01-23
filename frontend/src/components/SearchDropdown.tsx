@@ -62,7 +62,6 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
           setPopularCategories(data.popular_categories || []);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
       }
     };
     fetchData();
@@ -115,15 +114,12 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
           const data = JSON.parse(text);
           setProducts((data.products || []).slice(0, 6));
         } catch (jsonError) {
-          console.error('Invalid JSON response:', text);
           setProducts([]);
         }
       } else {
-        console.error('API request failed:', productsRes.status, productsRes.statusText);
         setProducts([]);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
       setProducts([]);
     } finally {
       setLoading(false);
