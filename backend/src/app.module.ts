@@ -15,6 +15,7 @@ import { SettingsModule } from './settings/settings.module';
 import { ProductColorsModule } from './product-colors/product-colors.module';
 import { ProductImagesModule } from './product-images/product-images.module';
 import { ProductColorImagesModule } from './product-color-images/product-color-images.module';
+import { ExportModule } from './export/export.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ProductColorImagesModule } from './product-color-images/product-color-i
     ProductColorsModule,
     ProductImagesModule,
     ProductColorImagesModule,
+    ExportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

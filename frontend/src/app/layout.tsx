@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import SafeDynamicFavicon from "@/components/SafeDynamicFavicon";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -43,6 +44,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CartProvider>
+            <SafeDynamicFavicon />
             {children}
             <WhatsAppButton />
           </CartProvider>

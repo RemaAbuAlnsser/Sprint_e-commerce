@@ -3,8 +3,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Injectable()
 export class AdminAuthGuard extends JwtAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const isAuthenticated = super.canActivate(context);
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isAuthenticated = await super.canActivate(context);
     if (!isAuthenticated) {
       return false;
     }
