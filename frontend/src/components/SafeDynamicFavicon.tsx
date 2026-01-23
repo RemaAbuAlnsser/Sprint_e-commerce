@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { API_URL } from '@/lib/api';
 
 interface SiteInfo {
@@ -13,6 +13,7 @@ interface SiteInfo {
 export default function SafeDynamicFavicon() {
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const hasUpdated = useRef(false);
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function SafeDynamicFavicon() {
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || hasUpdated.current) return;
 
     const fetchSiteInfo = async () => {
       try {
@@ -39,70 +40,90 @@ export default function SafeDynamicFavicon() {
   }, [isClient]);
 
   useEffect(() => {
-    if (!isClient || !siteInfo?.site_logo) return;
+    if (!isClient || !siteInfo?.site_logo || hasUpdated.current) return;
 
     const updateFavicon = () => {
       try {
-        // Check if document and head are available
-        if (typeof window === 'undefined' || !document?.head) {
-          return;
-        }
+        // Multiple safety checks
+        if (typeof window === 'undefined') return;
+        if (typeof document === 'undefined') return;
+        if (!document.head) return;
 
         const faviconUrl = `${API_URL}/favicon.ico?t=${Date.now()}`;
         
-        // Remove existing favicon links safely
-        const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
-        existingFavicons.forEach(link => {
-          try {
-            if (link && link.parentNode) {
-              link.parentNode.removeChild(link);
+        // Safer way to remove existing favicons
+        try {
+          const existingFavicons = Array.from(document.querySelectorAll('link[rel*="icon"]'));
+          existingFavicons.forEach(link => {
+            try {
+              if (link && link.parentElement && link.parentElement.contains(link)) {
+                link.parentElement.removeChild(link);
+              }
+            } catch (removeError) {
+              // Silently ignore removal errors
             }
-          } catch (e) {
-            // Ignore errors when removing links
-            console.debug('Could not remove favicon link:', e);
-          }
-        });
+          });
+        } catch (queryError) {
+          // Silently ignore query errors
+        }
         
-        // Create and add new favicon elements
-        const faviconElements = [
+        // Create and add new favicon elements with error handling
+        const faviconConfigs = [
           { rel: 'icon', type: 'image/x-icon', href: faviconUrl },
           { rel: 'shortcut icon', type: 'image/x-icon', href: faviconUrl },
-          { rel: 'apple-touch-icon', href: `${API_URL}/apple-touch-icon.png?t=${Date.now()}` },
-          { rel: 'icon', type: 'image/png', sizes: '32x32', href: faviconUrl },
-          { rel: 'icon', type: 'image/png', sizes: '16x16', href: faviconUrl }
+          { rel: 'apple-touch-icon', href: `${API_URL}/apple-touch-icon.png?t=${Date.now()}` }
         ];
 
-        faviconElements.forEach(config => {
+        faviconConfigs.forEach(config => {
           try {
+            if (!document.head) return;
+            
             const link = document.createElement('link');
             link.rel = config.rel;
             if (config.type) link.type = config.type;
-            if (config.sizes) link.sizes = config.sizes;
             link.href = config.href;
-            document.head.appendChild(link);
-          } catch (e) {
-            console.debug('Could not add favicon link:', e);
+            
+            // Additional safety check before appending
+            if (document.head && document.head.appendChild) {
+              document.head.appendChild(link);
+            }
+          } catch (createError) {
+            // Silently ignore creation errors
           }
         });
         
         // Update page title safely
-        if (siteInfo.site_name && document.title !== siteInfo.site_name) {
-          document.title = siteInfo.site_name;
+        try {
+          if (siteInfo.site_name && document.title !== siteInfo.site_name) {
+            document.title = siteInfo.site_name;
+          }
+        } catch (titleError) {
+          // Silently ignore title update errors
         }
         
+        hasUpdated.current = true;
+        
       } catch (error) {
-        console.error('Error updating favicon:', error);
+        // Silently handle all errors to prevent crashes
+        console.debug('Favicon update error (safely handled):', error);
       }
     };
 
-    // Use requestAnimationFrame to ensure DOM is ready
-    const rafId = requestAnimationFrame(() => {
-      setTimeout(updateFavicon, 100);
-    });
+    // Multiple layers of safety for DOM readiness
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateFavicon, { once: true });
+    } else {
+      // Use multiple async methods to ensure DOM is ready
+      const timeoutId = setTimeout(updateFavicon, 200);
+      const rafId = requestAnimationFrame(() => {
+        setTimeout(updateFavicon, 100);
+      });
 
-    return () => {
-      cancelAnimationFrame(rafId);
-    };
+      return () => {
+        clearTimeout(timeoutId);
+        cancelAnimationFrame(rafId);
+      };
+    }
   }, [isClient, siteInfo]);
 
   return null; // This component doesn't render anything

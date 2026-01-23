@@ -4,7 +4,6 @@ import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import SafeDynamicFavicon from "@/components/SafeDynamicFavicon";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -39,12 +38,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <link rel="icon" href="http://104.234.26.192:3000/uploads/companies/company-1769093110255-195980110.png" type="image/png" />
+        <link rel="shortcut icon" href="http://104.234.26.192:3000/uploads/companies/company-1769093110255-195980110.png" type="image/png" />
+        <link rel="apple-touch-icon" href="http://104.234.26.192:3000/uploads/companies/company-1769093110255-195980110.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="http://104.234.26.192:3000/uploads/companies/company-1769093110255-195980110.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="http://104.234.26.192:3000/uploads/companies/company-1769093110255-195980110.png" />
+      </head>
       <body
         className={`${cairo.variable} ${tajawal.variable} ${amiri.variable} antialiased`}
       >
         <AuthProvider>
           <CartProvider>
-            <SafeDynamicFavicon />
             {children}
             <WhatsAppButton />
           </CartProvider>
