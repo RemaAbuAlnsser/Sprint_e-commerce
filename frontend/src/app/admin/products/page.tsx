@@ -114,7 +114,7 @@ export default function ProductsPage() {
 
   const fetchAvailableColors = async () => {
     try {
-      const response = await fetch('http://104.234.26.192:3000/product-colors/available-colors');
+      const response = await fetch(`${API_URL}/product-colors/available-colors`);
       const data = await response.json();
       const colorNames = data.map((item: any) => item.color_name);
       setAvailableColors(colorNames);
@@ -125,7 +125,7 @@ export default function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://104.234.26.192:3000/categories');
+      const response = await fetch(`${API_URL}/categories`);
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -135,7 +135,7 @@ export default function ProductsPage() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('http://104.234.26.192:3000/companies');
+      const response = await fetch(`${API_URL}/companies`);
       const data = await response.json();
       setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -145,7 +145,7 @@ export default function ProductsPage() {
 
   const fetchAllSubcategories = async () => {
     try {
-      const response = await fetch('http://104.234.26.192:3000/subcategories');
+      const response = await fetch(`${API_URL}/subcategories`);
       const data = await response.json();
       setSubcategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -161,7 +161,7 @@ export default function ProductsPage() {
     }
     
     try {
-      const response = await fetch(`http://104.234.26.192:3000/subcategories/category/${categoryId}`);
+      const response = await fetch(`${API_URL}/subcategories/category/${categoryId}`);
       const data = await response.json();
       setSubcategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -172,7 +172,7 @@ export default function ProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://104.234.26.192:3000/products');
+      const response = await fetch(`${API_URL}/products`);
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -193,7 +193,7 @@ export default function ProductsPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://104.234.26.192:3000/upload/product-image', {
+        const response = await fetch(`${API_URL}/upload/product-image`, {
           method: 'POST',
           body: formDataUpload,
         });
@@ -221,7 +221,7 @@ export default function ProductsPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://104.234.26.192:3000/upload/product-hover-image', {
+        const response = await fetch(`${API_URL}/upload/product-hover-image`, {
           method: 'POST',
           body: formDataUpload,
         });
@@ -250,7 +250,7 @@ export default function ProductsPage() {
           formDataUpload.append('image', file);
 
           try {
-            const response = await fetch('http://104.234.26.192:3000/upload/product-gallery-image', {
+            const response = await fetch(`${API_URL}/upload/product-gallery-image`, {
               method: 'POST',
               body: formDataUpload,
             });
@@ -295,10 +295,10 @@ export default function ProductsPage() {
       fetchSubcategories(product.category_id.toString());
     }
     if (product.image_url) {
-      setImagePreview(`http://104.234.26.192:3000${product.image_url}`);
+      setImagePreview(`${API_URL}${product.image_url}`);
     }
     if (product.hover_image_url) {
-      setHoverImagePreview(`http://104.234.26.192:3000${product.hover_image_url}`);
+      setHoverImagePreview(`${API_URL}${product.hover_image_url}`);
     }
     // Fetch product colors
     await fetchProductColors(product.id);
@@ -311,8 +311,8 @@ export default function ProductsPage() {
 
     try {
       const url = editingProduct
-        ? `http://104.234.26.192:3000/products/${editingProduct.id}`
-        : 'http://104.234.26.192:3000/products';
+        ? `${API_URL}/products/${editingProduct.id}`
+        : `${API_URL}/products`;
       
       const method = editingProduct ? 'PUT' : 'POST';
 
@@ -341,7 +341,7 @@ export default function ProductsPage() {
         if (!editingProduct && tempColors.length > 0 && result.id) {
           for (const color of tempColors) {
             if (color.color_name && color.stock > 0) {
-              await fetch('http://104.234.26.192:3000/product-colors', {
+              await fetch(`${API_URL}/product-colors`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -360,7 +360,7 @@ export default function ProductsPage() {
           for (const color of productColors) {
             // Only save colors that don't have an ID (new colors)
             if (!('id' in color) && color.color_name && color.stock > 0) {
-              await fetch('http://104.234.26.192:3000/product-colors', {
+              await fetch(`${API_URL}/product-colors`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -387,7 +387,7 @@ export default function ProductsPage() {
             };
             console.log('Saving image:', imageData);
             
-            const imageResponse = await fetch('http://104.234.26.192:3000/product-images', {
+            const imageResponse = await fetch(`${API_URL}/product-images`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(imageData),
@@ -437,7 +437,7 @@ export default function ProductsPage() {
     if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
 
     try {
-      const response = await fetch(`http://104.234.26.192:3000/products/${id}`, {
+      const response = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
       });
 
@@ -455,7 +455,7 @@ export default function ProductsPage() {
 
   const fetchProductColors = async (productId: number) => {
     try {
-      const response = await fetch(`http://104.234.26.192:3000/product-colors/product/${productId}`);
+      const response = await fetch(`${API_URL}/product-colors/product/${productId}`);
       const data = await response.json();
       setProductColors(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -483,7 +483,7 @@ export default function ProductsPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://104.234.26.192:3000/upload/product-color-image', {
+        const response = await fetch(`${API_URL}/upload/product-color-image`, {
           method: 'POST',
           body: formDataUpload,
         });
@@ -505,7 +505,7 @@ export default function ProductsPage() {
     if (!productId || !colorFormData.color_name || !colorFormData.stock) return;
 
     try {
-      const response = await fetch('http://104.234.26.192:3000/product-colors', {
+      const response = await fetch(`${API_URL}/product-colors`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -523,7 +523,7 @@ export default function ProductsPage() {
         const colorId = result.id;
         for (let i = 0; i < colorGalleryImages.length; i++) {
           try {
-            await fetch('http://104.234.26.192:3000/product-color-images', {
+            await fetch(`${API_URL}/product-color-images`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -559,7 +559,7 @@ export default function ProductsPage() {
     if (!confirm('هل أنت متأكد من حذف هذا اللون؟')) return;
 
     try {
-      const response = await fetch(`http://104.234.26.192:3000/product-colors/${colorId}`, {
+      const response = await fetch(`${API_URL}/product-colors/${colorId}`, {
         method: 'DELETE',
       });
 
@@ -695,7 +695,7 @@ export default function ProductsPage() {
                                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg bg-white shadow-md border-2 border-[#e8e8c8] flex items-center justify-center flex-shrink-0 overflow-hidden group">
                                       {product.image_url ? (
                                         <img
-                                          src={`http://104.234.26.192:3000${product.image_url}`}
+                                          src={`${API_URL}${product.image_url}`}
                                           alt={product.name}
                                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                         />
@@ -782,7 +782,7 @@ export default function ProductsPage() {
                               <div className="w-16 h-16 rounded-lg bg-white shadow-md border-2 border-[#e8e8c8] flex items-center justify-center flex-shrink-0 overflow-hidden">
                                 {product.image_url ? (
                                   <img
-                                    src={`http://104.234.26.192:3000${product.image_url}`}
+                                    src={`${API_URL}${product.image_url}`}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
                                   />
@@ -908,7 +908,7 @@ export default function ProductsPage() {
                                       <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg border-2 border-[#5E4A45]/20 flex items-center justify-center flex-shrink-0 overflow-hidden group">
                                         {product.image_url ? (
                                           <img
-                                            src={`http://104.234.26.192:3000${product.image_url}`}
+                                            src={`${API_URL}${product.image_url}`}
                                             alt={product.name}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                           />
@@ -995,7 +995,7 @@ export default function ProductsPage() {
                                 <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 shadow-md border-2 border-[#5E4A45]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                   {product.image_url ? (
                                     <img
-                                      src={`http://104.234.26.192:3000${product.image_url}`}
+                                      src={`${API_URL}${product.image_url}`}
                                       alt={product.name}
                                       className="w-full h-full object-cover"
                                     />
@@ -1573,7 +1573,7 @@ export default function ProductsPage() {
                                   formDataUpload.append('image', file);
                                   
                                   try {
-                                    const response = await fetch('http://104.234.26.192:3000/upload/product-color-image', {
+                                    const response = await fetch(`${API_URL}/upload/product-color-image`, {
                                       method: 'POST',
                                       body: formDataUpload,
                                     });
@@ -1622,7 +1622,7 @@ export default function ProductsPage() {
                       {color.image_url && (
                         <div className="mr-3 flex items-center gap-2">
                           <img
-                            src={editingProduct ? `http://104.234.26.192:3000${color.image_url}` : color.image_url}
+                            src={editingProduct ? `${API_URL}${color.image_url}` : color.image_url}
                             alt={color.color_name}
                             className="h-12 w-12 object-cover rounded-lg border-2 border-[#5E4A45]"
                           />
@@ -1832,7 +1832,7 @@ export default function ProductsPage() {
                               formData.append('file', file);
                               
                               try {
-                                const response = await fetch('http://104.234.26.192:3000/upload/product-gallery-image', {
+                                const response = await fetch(`${API_URL}/upload/product-gallery-image`, {
                                   method: 'POST',
                                   body: formData,
                                 });
@@ -1841,7 +1841,7 @@ export default function ProductsPage() {
                                 if (result.success) {
                                   newImages.push({
                                     url: result.imageUrl,
-                                    preview: `http://104.234.26.192:3000${result.imageUrl}`
+                                    preview: `${API_URL}${result.imageUrl}`
                                   });
                                 }
                               } catch (error) {
@@ -1904,7 +1904,7 @@ export default function ProductsPage() {
                         <div className="flex items-start gap-4">
                           {color.image_url ? (
                             <img
-                              src={`http://104.234.26.192:3000${color.image_url}`}
+                              src={`${API_URL}${color.image_url}`}
                               alt={color.color_name}
                               className="w-20 h-20 object-cover rounded-lg border-2 border-[#5E4A45]/20"
                             />

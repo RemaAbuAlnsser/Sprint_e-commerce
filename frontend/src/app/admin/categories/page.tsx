@@ -63,7 +63,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://104.234.26.192:3000/categories');
+      const response = await fetch(`${API_URL}/categories`);
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -74,7 +74,7 @@ export default function CategoriesPage() {
 
   const fetchSubcategories = async (categoryId: number) => {
     try {
-      const response = await fetch(`http://104.234.26.192:3000/subcategories/category/${categoryId}`);
+      const response = await fetch(`${API_URL}/subcategories/category/${categoryId}`);
       const data = await response.json();
       setSubcategories(prev => ({
         ...prev,
@@ -119,7 +119,7 @@ export default function CategoriesPage() {
       image_url: subcategory.image_url || '',
     });
     if (subcategory.image_url) {
-      setImagePreview(`http://104.234.26.192:3000${subcategory.image_url}`);
+      setImagePreview(`${API_URL}${subcategory.image_url}`);
     }
     setIsSubModalOpen(true);
   };
@@ -137,7 +137,7 @@ export default function CategoriesPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://104.234.26.192:3000/upload/subcategory-image', {
+        const response = await fetch(`${API_URL}/upload/subcategory-image`, {
           method: 'POST',
           body: formDataUpload,
         });
@@ -158,8 +158,8 @@ export default function CategoriesPage() {
 
     try {
       const url = editingSubcategory
-        ? `http://104.234.26.192:3000/subcategories/${editingSubcategory.id}`
-        : 'http://104.234.26.192:3000/subcategories';
+        ? `${API_URL}/subcategories/${editingSubcategory.id}`
+        : `${API_URL}/subcategories`;
       
       const method = editingSubcategory ? 'PUT' : 'POST';
 
@@ -197,7 +197,7 @@ export default function CategoriesPage() {
     if (!confirm('هل أنت متأكد من حذف هذه الفئة الفرعية؟')) return;
 
     try {
-      const response = await fetch(`http://104.234.26.192:3000/subcategories/${id}`, {
+      const response = await fetch(`${API_URL}/subcategories/${id}`, {
         method: 'DELETE',
       });
 
@@ -228,7 +228,7 @@ export default function CategoriesPage() {
       formDataUpload.append('image', file);
 
       try {
-        const response = await fetch('http://104.234.26.192:3000/upload/category-image', {
+        const response = await fetch(`${API_URL}/upload/category-image`, {
           method: 'POST',
           body: formDataUpload,
         });
@@ -251,7 +251,7 @@ export default function CategoriesPage() {
       image_url: category.image_url || '',
     });
     if (category.image_url) {
-      setImagePreview(`http://104.234.26.192:3000${category.image_url}`);
+      setImagePreview(`${API_URL}${category.image_url}`);
     }
     setIsModalOpen(true);
   };
@@ -262,8 +262,8 @@ export default function CategoriesPage() {
 
     try {
       const url = editingCategory
-        ? `http://104.234.26.192:3000/categories/${editingCategory.id}`
-        : 'http://104.234.26.192:3000/categories';
+        ? `${API_URL}/categories/${editingCategory.id}`
+        : `${API_URL}/categories`;
       
       const method = editingCategory ? 'PUT' : 'POST';
 
@@ -299,7 +299,7 @@ export default function CategoriesPage() {
     if (!confirm('هل أنت متأكد من حذف هذه الفئة؟')) return;
 
     try {
-      const response = await fetch(`http://104.234.26.192:3000/categories/${id}`, {
+      const response = await fetch(`${API_URL}/categories/${id}`, {
         method: 'DELETE',
       });
 
@@ -343,7 +343,7 @@ export default function CategoriesPage() {
                 <div className="w-16 h-16 md:w-24 md:h-24 rounded-lg bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] flex items-center justify-center flex-shrink-0">
                   {category.image_url ? (
                     <img
-                      src={`http://104.234.26.192:3000${category.image_url}`}
+                      src={`${API_URL}${category.image_url}`}
                       alt={category.name}
                       className="w-full h-full object-cover rounded-lg"
                     />
@@ -422,7 +422,7 @@ export default function CategoriesPage() {
                           <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-[#f5f5dc] to-[#e8e8c8] flex items-center justify-center flex-shrink-0">
                             {sub.image_url ? (
                               <img
-                                src={`http://104.234.26.192:3000${sub.image_url}`}
+                                src={`${API_URL}${sub.image_url}`}
                                 alt={sub.name}
                                 className="w-full h-full object-cover rounded-lg"
                               />

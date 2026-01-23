@@ -35,7 +35,7 @@ const MegaMenu = memo(function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://104.234.26.192:3000/categories/with-subcategories');
+        const response = await fetch(`${API_URL}/categories/with-subcategories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -178,7 +178,7 @@ const MegaMenu = memo(function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                           <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
                             {subcategory.image_url ? (
                               <Image
-                                src={`http://104.234.26.192:3000${subcategory.image_url}`}
+                                src={`${API_URL}${subcategory.image_url}`}
                                 alt={subcategory.name}
                                 width={80}
                                 height={80}

@@ -43,8 +43,8 @@ export default function DealsPage() {
   useEffect(() => {
     const fetchDeals = async () => {
       try {
-        console.log('Fetching deals from: http://104.234.26.192:3000/products/deals');
-        const response = await fetch('http://104.234.26.192:3000/products/deals');
+        console.log('Fetching deals from: ${API_URL}/products/deals');
+        const response = await fetch(`${API_URL}/products/deals`);
         console.log('Response status:', response.status);
         console.log('Response ok:', response.ok);
         
@@ -213,14 +213,14 @@ export default function DealsPage() {
                     {product.image_url ? (
                       <>
                         <Image
-                          src={`http://104.234.26.192:3000${product.image_url}`}
+                          src={`${API_URL}${product.image_url}`}
                           alt={product.name}
                           fill
                           className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                         />
                         {product.hover_image_url && (
                           <Image
-                            src={`http://104.234.26.192:3000${product.hover_image_url}`}
+                            src={`${API_URL}${product.hover_image_url}`}
                             alt={product.name}
                             fill
                             className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}

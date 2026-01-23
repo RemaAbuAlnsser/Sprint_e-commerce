@@ -67,7 +67,7 @@ export default function CheckoutPage() {
 
       console.log('Sending order data:', orderData);
 
-      const response = await fetch('http://104.234.26.192:3000/orders', {
+      const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ export default function CheckoutPage() {
                     <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                       {(item.color_image_url || item.image_url) ? (
                         <Image
-                          src={`http://104.234.26.192:3000${item.color_image_url || item.image_url}`}
+                          src={`${API_URL}${item.color_image_url || item.image_url}`}
                           alt={item.name}
                           width={64}
                           height={64}

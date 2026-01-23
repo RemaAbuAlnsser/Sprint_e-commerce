@@ -8,7 +8,7 @@ import MegaMenu from './MegaMenu';
 import SearchDropdown from './SearchDropdown';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
-import { API_URL } from '@/lib/api';
+import { API_URL, getImageUrl } from '@/lib/api';
 
 interface Category {
   id: number;
@@ -40,7 +40,7 @@ const Header = memo(function Header() {
         const response = await fetch(`${API_URL}/settings`);
         if (response.ok) {
           const data = await response.json();
-          setSiteLogo(`${API_URL}${data.site_logo}`);
+          setSiteLogo(data.site_logo); // Store just the path, getImageUrl will handle the full URL
           if (data.site_name) setSiteName(data.site_name);
         }
       } catch (error) {
@@ -155,7 +155,7 @@ const Header = memo(function Header() {
             <div className="w-12 h-12 bg-[#2c2c2c] rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
               {!loading && siteLogo ? (
                 <Image
-                  src={`http://104.234.26.192:3000${siteLogo}`}
+                  src={getImageUrl(siteLogo)}
                   alt="Site Logo"
                   width={48}
                   height={48}

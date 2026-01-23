@@ -24,7 +24,7 @@ export default function LoginPage() {
     // تحميل اسم الموقع من API
     const loadSiteName = async () => {
       try {
-        const response = await fetch('http://104.234.26.192:3000/settings');
+        const response = await fetch(`${API_URL}/settings`);
         const data = await response.json();
         if (data.site_name) setSiteName(data.site_name);
       } catch (error) {

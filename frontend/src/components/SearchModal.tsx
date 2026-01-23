@@ -70,7 +70,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const fetchAllProducts = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://104.234.26.192:3000/products');
+      const response = await fetch(`${API_URL}/products`);
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -188,7 +188,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   >
                     {product.image_url ? (
                       <Image
-                        src={`http://104.234.26.192:3000${product.image_url}`}
+                        src={`${API_URL}${product.image_url}`}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"

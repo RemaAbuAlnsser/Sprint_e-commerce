@@ -83,7 +83,7 @@ export default function ProductPage() {
 
   const fetchProductColors = async (productId: number) => {
     try {
-      const response = await fetch(`http://104.234.26.192:3000/product-colors/product/${productId}`);
+      const response = await fetch(`${API_URL}/product-colors/product/${productId}`);
       if (response.ok) {
         const colors = await response.json();
         console.log('Product colors:', colors);
@@ -100,7 +100,7 @@ export default function ProductPage() {
 
   const fetchColorImages = async (colorId: number) => {
     try {
-      const response = await fetch(`http://104.234.26.192:3000/product-color-images/color/${colorId}`);
+      const response = await fetch(`${API_URL}/product-color-images/color/${colorId}`);
       if (response.ok) {
         const images = await response.json();
         console.log('Color images:', images);
@@ -118,7 +118,7 @@ export default function ProductPage() {
       setIsLoading(true);
       console.log('Fetching product with SKU:', productSku);
       
-      const response = await fetch(`http://104.234.26.192:3000/products/sku/${productSku}`);
+      const response = await fetch(`${API_URL}/products/sku/${productSku}`);
       
       if (response.ok) {
         const productData = await response.json();
@@ -140,7 +140,7 @@ export default function ProductPage() {
   const fetchRelatedProducts = async (categoryId: number, currentProductId: number) => {
     try {
       setLoadingRelated(true);
-      const response = await fetch(`http://104.234.26.192:3000/products/category/${categoryId}`);
+      const response = await fetch(`${API_URL}/products/category/${categoryId}`);
       
       if (response.ok) {
         const products = await response.json();
@@ -173,7 +173,7 @@ export default function ProductPage() {
     flyingProduct.style.height = '60px';
     
     const flyingImage = document.createElement('img');
-    flyingImage.src = `http://104.234.26.192:3000${currentImageUrl}`;
+    flyingImage.src = `${API_URL}${currentImageUrl}`;
     flyingImage.className = 'w-full h-full object-cover rounded-lg shadow-lg';
     flyingProduct.appendChild(flyingImage);
     
@@ -349,7 +349,7 @@ export default function ProductPage() {
                       }`}
                     >
                       <Image
-                        src={`http://104.234.26.192:3000${img}`}
+                        src={`${API_URL}${img}`}
                         alt={`${product.name} - ${index + 1}`}
                         fill
                         className="object-cover"
@@ -394,7 +394,7 @@ export default function ProductPage() {
                     return currentImage ? (
                       <>
                         <Image
-                          src={`http://104.234.26.192:3000${currentImage}`}
+                          src={`${API_URL}${currentImage}`}
                           alt={product.name}
                           fill
                           className="object-cover transition-all duration-500 group-hover:scale-105"
@@ -508,7 +508,7 @@ export default function ProductPage() {
                       {color.image_url ? (
                         <div className="relative w-16 h-16 rounded-lg overflow-hidden">
                           <Image
-                            src={`http://104.234.26.192:3000${color.image_url}`}
+                            src={`${API_URL}${color.image_url}`}
                             alt={color.color_name}
                             fill
                             className="object-cover"
@@ -627,7 +627,7 @@ export default function ProductPage() {
                   >
                     {relatedProduct.image_url ? (
                       <Image
-                        src={`http://104.234.26.192:3000${relatedProduct.image_url}`}
+                        src={`${API_URL}${relatedProduct.image_url}`}
                         alt={relatedProduct.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"

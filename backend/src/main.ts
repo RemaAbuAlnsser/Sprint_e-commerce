@@ -16,6 +16,7 @@ async function bootstrap() {
       'http://localhost:3002',
       'http://104.234.26.192:3000',
       'http://104.234.26.192:3001',
+      'http://104.234.26.192:3002',
       'http://104.234.26.192',
     ],
     credentials: true,

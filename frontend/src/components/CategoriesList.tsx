@@ -31,7 +31,7 @@ export default function CategoriesList() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://104.234.26.192:3000/categories/with-subcategories');
+        const response = await fetch(`${API_URL}/categories/with-subcategories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);

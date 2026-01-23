@@ -63,7 +63,7 @@ function SearchContent() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const { addToCart } = useCart();
   const { isAnimating, createFlyingAnimation } = useFlyingAnimation();
@@ -81,8 +81,8 @@ function SearchContent() {
     const fetchData = async () => {
       try {
         const [categoriesRes, popularRes] = await Promise.all([
-          fetch('http://104.234.26.192:3000/categories'),
-          fetch('http://104.234.26.192:3000/products/search/popular')
+          fetch(`${API_URL}/categories`),
+          fetch(`${API_URL}/products/search/popular`)
         ]);
 
         if (categoriesRes.ok) {
@@ -111,7 +111,7 @@ function SearchContent() {
       if (searchFilters.maxPrice) params.set('max_price', searchFilters.maxPrice);
       if (searchFilters.sort) params.set('sort', searchFilters.sort);
 
-      const res = await fetch(`http://104.234.26.192:3000/products/search?${params.toString()}`);
+      const res = await fetch(`${API_URL}/products/search?${params.toString()}`);
       const data = await res.json();
       
       setProducts(data.products || []);
@@ -145,7 +145,7 @@ function SearchContent() {
     }
 
     try {
-      const res = await fetch(`http://104.234.26.192:3000/products/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${API_URL}/products/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
       setSuggestions(data.suggestions || []);
     } catch (error) {
@@ -523,14 +523,14 @@ function SearchContent() {
                   {product.image_url ? (
                     <>
                       <Image
-                        src={`http://104.234.26.192:3000${product.image_url}`}
+                        src={`${API_URL}${product.image_url}`}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                       {product.hover_image_url && (
                         <Image
-                          src={`http://104.234.26.192:3000${product.hover_image_url}`}
+                          src={`${API_URL}${product.hover_image_url}`}
                           alt={product.name}
                           fill
                           className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"

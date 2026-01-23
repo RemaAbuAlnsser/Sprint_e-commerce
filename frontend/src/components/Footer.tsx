@@ -103,7 +103,7 @@ const Footer = memo(function Footer() {
               </div>
               {settings.site_logo ? (
                 <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
-                  <img src={`http://104.234.26.192:3000${settings.site_logo}`} alt={settings.site_name} className="w-full h-full object-contain" />
+                  <img src={`${API_URL}${settings.site_logo}`} alt={settings.site_name} className="w-full h-full object-contain" />
                 </div>
               ) : (
                 <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg">

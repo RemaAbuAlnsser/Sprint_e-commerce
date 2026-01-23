@@ -49,8 +49,8 @@ export default function SubcategoryPage() {
         console.log('Fetching subcategory:', subcategoryId);
 
         const [subcategoryRes, productsRes] = await Promise.all([
-          fetch(`http://104.234.26.192:3000/subcategories/${subcategoryId}`),
-          fetch(`http://104.234.26.192:3000/products/subcategory/${subcategoryId}`)
+          fetch(`${API_URL}/subcategories/${subcategoryId}`),
+          fetch(`${API_URL}/products/subcategory/${subcategoryId}`)
         ]);
 
         if (subcategoryRes.ok) {
@@ -228,14 +228,14 @@ export default function SubcategoryPage() {
                     {product.image_url ? (
                       <>
                         <Image
-                          src={`http://104.234.26.192:3000${product.image_url}`}
+                          src={`${API_URL}${product.image_url}`}
                           alt={product.name}
                           fill
                           className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                         />
                         {product.hover_image_url && (
                           <Image
-                            src={`http://104.234.26.192:3000${product.hover_image_url}`}
+                            src={`${API_URL}${product.hover_image_url}`}
                             alt={product.name}
                             fill
                             className={`object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${product.stock === 0 ? 'grayscale' : ''}`}

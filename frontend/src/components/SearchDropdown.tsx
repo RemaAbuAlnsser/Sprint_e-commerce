@@ -49,8 +49,8 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
     const fetchData = async () => {
       try {
         const [categoriesRes, popularRes] = await Promise.all([
-          fetch('http://104.234.26.192:3000/categories'),
-          fetch('http://104.234.26.192:3000/products/search/popular')
+          fetch(`${API_URL}/categories`),
+          fetch(`${API_URL}/products/search/popular`)
         ]);
 
         if (categoriesRes.ok) {
@@ -107,7 +107,7 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
 
     try {
       setLoading(true);
-      const productsRes = await fetch(`http://104.234.26.192:3000/products/search?q=${encodeURIComponent(searchQuery)}`);
+      const productsRes = await fetch(`${API_URL}/products/search?q=${encodeURIComponent(searchQuery)}`);
       
       if (productsRes.ok) {
         const text = await productsRes.text();
@@ -250,7 +250,7 @@ const SearchDropdown = memo(function SearchDropdown({ isOpen, onClose, buttonRef
                             <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 group-hover:shadow-lg transition-all group-hover:scale-105">
                               {product.image_url ? (
                                 <Image
-                                  src={`http://104.234.26.192:3000${product.image_url}`}
+                                  src={`${API_URL}${product.image_url}`}
                                   alt={product.name}
                                   width={56}
                                   height={56}

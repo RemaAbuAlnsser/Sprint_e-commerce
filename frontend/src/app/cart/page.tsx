@@ -70,7 +70,7 @@ export default function CartPage() {
                     <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       {(item.color_image_url || item.image_url) ? (
                         <Image
-                          src={`http://104.234.26.192:3000${item.color_image_url || item.image_url}`}
+                          src={`${API_URL}${item.color_image_url || item.image_url}`}
                           alt={item.name}
                           width={128}
                           height={128}

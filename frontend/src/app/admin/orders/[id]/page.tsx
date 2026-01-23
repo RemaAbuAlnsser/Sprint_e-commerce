@@ -46,7 +46,7 @@ export default function OrderDetailsPage() {
   const fetchOrderDetails = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://104.234.26.192:3000/orders/${orderId}`);
+      const response = await fetch(`${API_URL}/orders/${orderId}`);
       const data = await response.json();
       setOrder(data);
     } catch (error) {
@@ -229,7 +229,7 @@ export default function OrderDetailsPage() {
                   <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     {item.image_url ? (
                       <Image
-                        src={`http://104.234.26.192:3000${item.image_url}`}
+                        src={`${API_URL}${item.image_url}`}
                         alt={item.product_name}
                         width={80}
                         height={80}
