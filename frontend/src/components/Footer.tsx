@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Facebook, Instagram, MessageCircle, Mail, Phone, MapPin } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import ReturnPolicyModal from './ReturnPolicyModal';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -29,6 +30,15 @@ const Footer = memo(function Footer() {
     whatsapp_url: '',
     site_logo: ''
   });
+
+  const [isReturnPolicyOpen, setIsReturnPolicyOpen] = useState(false);
+
+  const getWhatsAppUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const phoneNumber = url.replace(/[^0-9+]/g, '');
+    return `https://wa.me/${phoneNumber}`;
+  };
 
   useEffect(() => {
     // تحميل الإعدادات من API
@@ -91,210 +101,179 @@ const Footer = memo(function Footer() {
   };
 
   return (
-    <footer ref={footerRef} className="bg-[#2c2c2c] text-white">
-      <div className="container mx-auto px-6 py-12 md:py-16">
-        <div ref={topSectionRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
-          <div className="footer-column text-right">
-            <div className="flex items-center gap-3 mb-6 justify-end">
-              <div className="flex flex-col text-right">
-                <span className="text-2xl font-bold text-white leading-tight">{settings.site_name}</span>
-                <span className="text-sm text-gray-400">متجرك الموثوق</span>
+    <footer ref={footerRef} className="bg-[#1a1d2e] text-white border-t border-white/5">
+      <div className="container mx-auto px-6 py-16">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-12">
+          
+          {/* Left Section - Social Icons & Links (4 columns) */}
+          <div className="md:col-span-4 flex flex-col gap-8 order-3 md:order-1">
+            {/* Social Icons */}
+            <div className="flex flex-col gap-4">
+              <div ref={socialIconsRef} className="flex items-center gap-3">
+                {settings.whatsapp_url && (
+                  <a
+                    href={getWhatsAppUrl(settings.whatsapp_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 bg-[#25D366] hover:bg-[#20bd5a] rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl"
+                    onMouseEnter={handleIconHover}
+                    onMouseLeave={handleIconHoverOut}
+                    aria-label="WhatsApp"
+                  >
+                    <MessageCircle size={20} className="text-white" />
+                  </a>
+                )}
+                {settings.facebook_url && (
+                  <a
+                    href={settings.facebook_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 bg-[#1877F2] hover:bg-[#0d65d9] rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl"
+                    onMouseEnter={handleIconHover}
+                    onMouseLeave={handleIconHoverOut}
+                    aria-label="Facebook"
+                  >
+                    <Facebook size={20} className="text-white" />
+                  </a>
+                )}
+                {settings.instagram_url && (
+                  <a
+                    href={settings.instagram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 bg-gradient-to-br from-[#833AB4] via-[#E1306C] to-[#F77737] hover:opacity-90 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl"
+                    onMouseEnter={handleIconHover}
+                    onMouseLeave={handleIconHoverOut}
+                    aria-label="Instagram"
+                  >
+                    <Instagram size={20} className="text-white" />
+                  </a>
+                )}
               </div>
-              {settings.site_logo ? (
-                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
-                  <img src={`${API_URL}${settings.site_logo}`} alt={settings.site_name} className="w-full h-full object-contain" />
-                </div>
-              ) : (
-                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-2xl font-bold text-[#2c2c2c]">S</span>
-                </div>
-              )}
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              {settings.site_description}
-            </p>
+
+            {/* Quick Links */}
+            <div className="footer-column">
+              <h3 className="text-lg font-bold mb-6 text-white">روابط سريعة</h3>
+              <ul className="space-y-3">
+                <li>
+                  <button
+                    onClick={() => router.push('/')}
+                    className="text-gray-300 hover:text-white transition-colors text-sm inline-block cursor-pointer hover:translate-x-1 transition-transform"
+                    onMouseEnter={handleLinkHover}
+                    onMouseLeave={handleLinkHoverOut}
+                  >
+                    الرئيسية
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => router.push('/new')}
+                    className="text-gray-300 hover:text-white transition-colors text-sm inline-block cursor-pointer hover:translate-x-1 transition-transform"
+                    onMouseEnter={handleLinkHover}
+                    onMouseLeave={handleLinkHoverOut}
+                  >
+                    المنتجات
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => router.push('/deals')}
+                    className="text-gray-300 hover:text-white transition-colors text-sm inline-block cursor-pointer hover:translate-x-1 transition-transform"
+                    onMouseEnter={handleLinkHover}
+                    onMouseLeave={handleLinkHoverOut}
+                  >
+                    العروض
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setIsReturnPolicyOpen(true)}
+                    className="text-gray-300 hover:text-white transition-colors text-sm inline-block cursor-pointer hover:translate-x-1 transition-transform"
+                    onMouseEnter={handleLinkHover}
+                    onMouseLeave={handleLinkHoverOut}
+                  >
+                    سياسة التبديل والاسترجاع
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="footer-column text-right">
-            <h3 className="text-lg font-bold mb-4 text-white">روابط سريعة</h3>
-            <ul className="space-y-3">
-              <li>
-                <button
-                  onClick={() => router.push('/')}
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block cursor-pointer"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  الرئيسية
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push('/new')}
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block cursor-pointer"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  المنتجات
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push('/deals')}
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block cursor-pointer"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  العروض
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push('/')}
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block cursor-pointer"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  من نحن
-                </button>
-              </li>
-            </ul>
-          </div>
+          {/* Center Section - Contact Info (4 columns) */}
+          <div className="md:col-span-4 flex flex-col items-start md:items-center gap-6 order-2 md:order-2">
+            <div className="w-full">
+              <h3 className="text-lg font-bold mb-6 text-white text-right md:text-center">تواصل معنا</h3>
+              <ul className="space-y-4">
+                {settings.contact_phone && (
+                  <li className="flex items-center gap-3 justify-start md:justify-center text-gray-300 text-sm">
+                    <a href={`tel:${settings.contact_phone}`} className="hover:text-white transition-colors" dir="ltr">
+                      {settings.contact_phone}
+                    </a>
+                    <Phone size={18} className="text-gray-400" />
+                  </li>
+                )}
+                {settings.address && (
+                  <li className="flex items-center gap-3 justify-start md:justify-center text-gray-300 text-sm">
+                    <span>{settings.address}</span>
+                    <MapPin size={18} className="text-gray-400" />
+                  </li>
+                )}
+              </ul>
 
-          <div className="footer-column text-right">
-            <h3 className="text-lg font-bold mb-4 text-white">خدمة العملاء</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  تواصل معنا
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  سياسة الإرجاع
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  الشحن والتوصيل
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-[#d4af37] transition-colors text-sm inline-block"
-                  onMouseEnter={handleLinkHover}
-                  onMouseLeave={handleLinkHoverOut}
-                >
-                  الأسئلة الشائعة
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="footer-column text-right">
-            <h3 className="text-lg font-bold mb-4 text-white">تواصل معنا</h3>
-            <ul className="space-y-3">
-              {settings.contact_email && (
-                <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
-                  <a href={`mailto:${settings.contact_email}`} className="hover:text-[#d4af37] transition-colors">
-                    {settings.contact_email}
+              {/* Contact Button */}
+              <div className="mt-8 flex justify-start md:justify-center">
+                {settings.whatsapp_url && (
+                  <a
+                    href={getWhatsAppUrl(settings.whatsapp_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    <MessageCircle size={20} />
+                    <span>تواصل واتساب</span>
                   </a>
-                  <Mail size={18} className="text-[#d4af37]" />
-                </li>
-              )}
-              {settings.contact_phone && (
-                <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
-                  <a href={`tel:${settings.contact_phone}`} className="hover:text-[#d4af37] transition-colors" dir="ltr">
-                    {settings.contact_phone}
-                  </a>
-                  <Phone size={18} className="text-[#d4af37]" />
-                </li>
-              )}
-              {settings.address && (
-                <li className="flex items-center gap-3 justify-end text-gray-400 text-sm">
-                  <span>{settings.address}</span>
-                  <MapPin size={18} className="text-[#d4af37]" />
-                </li>
-              )}
-            </ul>
+                )}
+              </div>
+            </div>
+          </div>
 
-            <div ref={socialIconsRef} className="flex items-center gap-3 mt-6 justify-end">
-              {settings.whatsapp_url && (
-                <a
-                  href={settings.whatsapp_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-white/10 hover:bg-[#25D366] rounded-full flex items-center justify-center transition-colors"
-                  onMouseEnter={handleIconHover}
-                  onMouseLeave={handleIconHoverOut}
-                  aria-label="WhatsApp"
-                >
-                  <MessageCircle size={18} />
-                </a>
+          {/* Right Section - Logo & Brand (4 columns) */}
+          <div className="md:col-span-4 flex flex-col items-start md:items-end gap-4 order-1 md:order-3">
+            <div className="flex flex-col items-start md:items-end gap-3">
+              {settings.site_logo && (
+                <img 
+                  src={`${API_URL}${settings.site_logo}`} 
+                  alt={settings.site_name} 
+                  className="h-20 w-auto object-contain"
+                />
               )}
-              {settings.instagram_url && (
-                <a
-                  href={settings.instagram_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-white/10 hover:bg-[#E4405F] rounded-full flex items-center justify-center transition-colors"
-                  onMouseEnter={handleIconHover}
-                  onMouseLeave={handleIconHoverOut}
-                  aria-label="Instagram"
-                >
-                  <Instagram size={18} />
-                </a>
-              )}
-              {settings.facebook_url && (
-                <a
-                  href={settings.facebook_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-white/10 hover:bg-[#1877F2] rounded-full flex items-center justify-center transition-colors"
-                  onMouseEnter={handleIconHover}
-                  onMouseLeave={handleIconHoverOut}
-                  aria-label="Facebook"
-                >
-                  <Facebook size={18} />
-                </a>
-              )}
+              <h2 className="text-2xl font-bold text-white">
+                {settings.site_name}
+              </h2>
+              <p className="text-sm text-gray-400 text-right max-w-xs">
+                {settings.site_description}
+              </p>
             </div>
           </div>
         </div>
 
+        {/* Bottom Section - Copyright */}
         <div ref={bottomSectionRef} className="border-t border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-right">
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <a href="#" className="hover:text-[#d4af37] transition-colors">
-                سياسة الخصوصية
-              </a>
-              <span className="text-white/20">|</span>
-              <a href="#" className="hover:text-[#d4af37] transition-colors">
-                الشروط والأحكام
-              </a>
-            </div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 text-center">
             <p className="text-sm text-gray-400">
-              © 2026 {settings.site_name}. جميع الحقوق محفوظة.
+              © 2026 {settings.site_name}. جميع الحقوق محفوظة
             </p>
           </div>
         </div>
       </div>
+
+      {/* Return Policy Modal */}
+      <ReturnPolicyModal 
+        isOpen={isReturnPolicyOpen} 
+        onClose={() => setIsReturnPolicyOpen(false)} 
+      />
     </footer>
   );
 });

@@ -220,7 +220,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-[#f5f5dc]/50 rounded-xl border border-[#e8e8c8]">
+          {/* <div className="mt-6 p-4 bg-[#f5f5dc]/50 rounded-xl border border-[#e8e8c8]">
             <p className="text-xs text-[#8b7355] text-center mb-2 font-semibold">
               بيانات تجريبية:
             </p>
@@ -230,7 +230,7 @@ export default function AdminLoginPage() {
             <p className="text-xs text-[#2c2c2c] text-center">
               <strong>Password:</strong> admin123
             </p>
-          </div>
+          </div> */}
         </div>
 
         <div className="text-center mt-6">
