@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import {
   LayoutDashboard,
   FileText,
@@ -22,6 +24,7 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -45,6 +48,7 @@ export default function AdminLayout({
   const isLoginPage = pathname === '/admin';
 
   const handleLogout = () => {
+    logout();
     router.push('/admin');
   };
 
@@ -69,6 +73,7 @@ export default function AdminLayout({
   }
 
   return (
+    <ProtectedRoute redirectTo="/admin">
     <div className="flex flex-row-reverse min-h-screen bg-gradient-to-br from-[#f5f5dc] via-white to-[#e8e8c8]">
       {/* Sidebar */}
       <aside className={`bg-white shadow-xl flex flex-col border-r border-[#e8e8c8] fixed right-0 top-0 h-screen transition-all duration-300 ${
@@ -136,13 +141,22 @@ export default function AdminLayout({
               A
             </div>
             <div className="flex-1">
-              <p className="text-[#2c2c2c] font-medium text-sm">Admin</p>
-              <p className="text-[#5E4A45] text-xs">مدير</p>
+              <p className="text-[#2c2c2c] font-medium text-sm">{user?.name || 'Admin'}</p>
+              <p className="text-[#5E4A45] text-xs">{user?.role === 'admin' ? 'مدير' : 'مستخدم'}</p>
             </div>
             <div className="w-8 h-8 bg-[#5E4A45] rounded-full flex items-center justify-center text-white font-bold text-sm">
               1
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 mt-3 shadow-md hover:shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut size={20} />
+              <span className="font-medium">تسجيل الخروج</span>
+            </div>
+          </button>
         </div>
       </aside>
 
@@ -161,5 +175,6 @@ export default function AdminLayout({
         {children}
       </main>
     </div>
+    </ProtectedRoute>
   );
 }

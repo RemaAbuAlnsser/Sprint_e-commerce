@@ -3,11 +3,13 @@ import { API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import gsap from 'gsap';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { adminLogin, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +23,12 @@ export default function LoginPage() {
   const decorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Redirect if already authenticated
+    if (isAuthenticated) {
+      router.push('/admin/dashboard');
+      return;
+    }
+
     // تحميل اسم الموقع من API
     const loadSiteName = async () => {
       try {
@@ -65,19 +73,21 @@ export default function LoginPage() {
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (email === 'admin@sprint.com' && password === 'admin123') {
+    try {
+      const result = await adminLogin(email, password);
+      
+      if (result.success) {
         gsap.to(formRef.current, {
           opacity: 0,
           scale: 0.8,
           duration: 0.5,
           ease: 'power2.in',
           onComplete: () => {
-            router.push('/admin');
+            router.push('/admin/dashboard');
           },
         });
       } else {
-        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        setError(result.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
         setIsLoading(false);
         
         gsap.fromTo(
@@ -92,7 +102,22 @@ export default function LoginPage() {
           }
         );
       }
-    }, 1000);
+    } catch (error) {
+      setError('حدث خطأ في الاتصال');
+      setIsLoading(false);
+      
+      gsap.fromTo(
+        formRef.current,
+        { x: 0 },
+        {
+          keyframes: {
+            x: [-10, 10, -10, 10, 0],
+          },
+          duration: 0.5,
+          ease: 'power2.out',
+        }
+      );
+    }
   };
 
   return (

@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import gsap from 'gsap';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { adminLogin, isAuthenticated, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +22,14 @@ export default function AdminLoginPage() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const decorRef = useRef<HTMLDivElement>(null);
 
+  // Separate useEffect for authentication check
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.push('/admin/dashboard');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Separate useEffect for initial setup
   useEffect(() => {
     // تحميل اسم الموقع من API
     const loadSiteName = async () => {
@@ -65,8 +75,10 @@ export default function AdminLoginPage() {
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (email === 'admin@sprint.com' && password === 'admin123') {
+    try {
+      const result = await adminLogin(email, password);
+      
+      if (result.success) {
         gsap.to(formRef.current, {
           opacity: 0,
           scale: 0.8,
@@ -77,7 +89,7 @@ export default function AdminLoginPage() {
           },
         });
       } else {
-        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        setError(result.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
         setIsLoading(false);
         
         gsap.fromTo(
@@ -92,7 +104,22 @@ export default function AdminLoginPage() {
           }
         );
       }
-    }, 1000);
+    } catch (error) {
+      setError('حدث خطأ في الاتصال');
+      setIsLoading(false);
+      
+      gsap.fromTo(
+        formRef.current,
+        { x: 0 },
+        {
+          keyframes: {
+            x: [-10, 10, -10, 10, 0],
+          },
+          duration: 0.5,
+          ease: 'power2.out',
+        }
+      );
+    }
   };
 
   return (

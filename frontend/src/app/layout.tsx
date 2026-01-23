@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo, Tajawal, Amiri } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
 const cairo = Cairo({
@@ -40,10 +41,12 @@ export default function RootLayout({
       <body
         className={`${cairo.variable} ${tajawal.variable} ${amiri.variable} antialiased`}
       >
-        <CartProvider>
-          {children}
-          <WhatsAppButton />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <WhatsAppButton />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

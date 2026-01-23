@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { DatabaseService } from '../database/database.service';
 import * as bcrypt from 'bcrypt';
 
@@ -6,9 +7,10 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private databaseService: DatabaseService,
+    private jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
+  async adminLogin(email: string, password: string) {
     const query = 'SELECT * FROM users WHERE email = ?';
     const users: any = await this.databaseService.query(query, [email]);
 
@@ -23,8 +25,17 @@ export class AuthService {
       throw new UnauthorizedException('كلمة المرور غير صحيحة');
     }
 
+    // التحقق من أن المستخدم مدير
+    if (user.role !== 'admin') {
+      throw new UnauthorizedException('ليس لديك صلاحية للوصول إلى لوحة التحكم');
+    }
+
+    const payload = { email: user.email, sub: user.id, role: user.role };
+    const token = this.jwtService.sign(payload);
+
     return {
       success: true,
+      access_token: token,
       user: {
         id: user.id,
         email: user.email,
@@ -34,7 +45,7 @@ export class AuthService {
     };
   }
 
-  async register(data: { email: string; password: string; name: string }) {
+  async registerAdmin(data: { email: string; password: string; name: string }) {
     const checkQuery = 'SELECT id FROM users WHERE email = ?';
     const existingUsers: any = await this.databaseService.query(checkQuery, [data.email]);
 
@@ -50,12 +61,16 @@ export class AuthService {
         data.email,
         hashedPassword,
         data.name,
-        'customer',
+        'admin',
       ]);
+
+      const payload = { email: data.email, sub: result.insertId, role: 'admin' };
+      const token = this.jwtService.sign(payload);
 
       return {
         success: true,
         message: 'تم التسجيل بنجاح',
+        access_token: token,
         user: {
           id: result.insertId,
           email: data.email,
@@ -77,5 +92,25 @@ export class AuthService {
     }
 
     return users[0];
+  }
+
+  async updateUserRole(userId: number, role: string) {
+    const query = 'UPDATE users SET role = ? WHERE id = ?';
+    await this.databaseService.query(query, [role, userId]);
+    
+    return {
+      success: true,
+      message: 'تم تحديث دور المستخدم بنجاح',
+    };
+  }
+
+  async makeUserAdmin(email: string) {
+    const query = 'UPDATE users SET role = ? WHERE email = ?';
+    await this.databaseService.query(query, ['admin', email]);
+    
+    return {
+      success: true,
+      message: 'تم تحديث المستخدم إلى مدير بنجاح',
+    };
   }
 }
