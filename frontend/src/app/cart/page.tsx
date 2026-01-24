@@ -147,10 +147,10 @@ export default function CartPage() {
                   <span>المجموع الفرعي</span>
                   <span className="font-semibold">{totalPrice.toFixed(2)} ₪</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                {/* <div className="flex justify-between text-gray-600">
                   <span>الشحن</span>
                   <span className="font-semibold">مجاني</span>
-                </div>
+                </div> */}
                 <div className="border-t pt-4 flex justify-between text-lg font-bold text-[#2c2c2c]">
                   <span>المجموع الكلي</span>
                   <span className="text-[#d4af37]">{totalPrice.toFixed(2)} ₪</span>
