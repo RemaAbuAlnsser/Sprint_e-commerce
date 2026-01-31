@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 import CategorySection from '@/components/CategorySection';
@@ -10,10 +8,8 @@ import CategoriesMenu from '@/components/CategoriesMenu';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
 import { API_URL } from '@/lib/api';
+import { getImageUrl } from '@/lib/api';
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 interface Category {
   id: number;
@@ -23,11 +19,6 @@ interface Category {
 }
 
 export default function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const ctaRef = useRef<HTMLButtonElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [siteImages, setSiteImages] = useState<Array<{id: number; image_url: string}>>([]);
   const [loading, setLoading] = useState(true);
@@ -79,47 +70,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [siteImages.length]);
 
-  useEffect(() => {
-    if (loading) return;
-
-    const ctx = gsap.context(() => {
-      if (imageRef.current) {
-        gsap.from(imageRef.current, {
-          opacity: 0,
-          scale: 1.15,
-          duration: 1.5,
-          ease: 'power4.out',
-        });
-      }
-
-      const timeline = gsap.timeline();
-      
-      timeline
-        .from(titleRef.current, {
-          opacity: 0,
-          x: 120,
-          y: 30,
-          duration: 1.2,
-          ease: 'power4.out',
-        })
-        .from(subtitleRef.current, {
-          opacity: 0,
-          x: 100,
-          y: 20,
-          duration: 1,
-          ease: 'power3.out',
-        }, '-=0.6')
-        .from(ctaRef.current, {
-          opacity: 0,
-          scale: 0.7,
-          y: 20,
-          duration: 0.8,
-          ease: 'back.out(2.5)',
-        }, '-=0.4');
-    }, heroRef);
-
-    return () => ctx.revert();
-  }, [currentSlide, loading]);
 
   const nextSlide = () => {
     if (siteImages.length === 0) return;
@@ -137,7 +87,6 @@ export default function Home() {
       
       <main>
         <section
-          ref={heroRef}
           className="relative h-[60vh] md:h-[80vh] lg:h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 to-black"
         >
           {/* Background Images Slider */}
@@ -151,7 +100,7 @@ export default function Home() {
                   }`}
                 >
                   <Image
-                    src={`${API_URL}${image.image_url}`}
+                    src={getImageUrl(image.image_url)}
                     alt={`Slide ${index + 1}`}
                     fill
                     className="object-cover"

@@ -8,8 +8,12 @@ const nextConfig: NextConfig = {
         hostname: 'localhost',
         port: '3000',
       },
+      {
+        protocol: 'https',
+        hostname: 'spiritt.net',
+      },
     ],
-    domains: ['localhost'],
+    domains: ['localhost', 'spiritt.net'],
   },
 };
 
