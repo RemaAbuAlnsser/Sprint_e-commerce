@@ -17,6 +17,7 @@ interface Stats {
   categoriesCount: number;
   subcategoriesCount: number;
   totalRevenue: number;
+  totalSales: number;
 }
 
 interface Category {
@@ -32,6 +33,7 @@ export default function DashboardPage() {
     categoriesCount: 0,
     subcategoriesCount: 0,
     totalRevenue: 0,
+    totalSales: 0,
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,9 +53,12 @@ export default function DashboardPage() {
       const orders = await ordersRes.json();
       const ordersArray = Array.isArray(orders) ? orders : [];
       const ordersCount = ordersArray.length;
-      const totalRevenue = ordersArray
-        .filter((order: any) => order.status === 'completed')
-        .reduce((sum: number, order: any) => sum + Number(order.total_amount), 0);
+
+      // جلب بيانات الإيرادات من جدول revenue
+      const revenueRes = await fetch(`${API_URL}/orders/stats/revenue`);
+      const revenueData = await revenueRes.json();
+      const totalRevenue = revenueData.total_revenue || 0;
+      const totalSales = revenueData.total_sales || 0;
 
       const categoriesRes = await fetch(`${API_URL}/categories`);
       const categoriesData = await categoriesRes.json();
@@ -81,6 +86,7 @@ export default function DashboardPage() {
         categoriesCount: categoriesArray.length,
         subcategoriesCount: totalSubcategories,
         totalRevenue,
+        totalSales,
       });
     } catch (error) {
     } finally {
@@ -155,10 +161,16 @@ export default function DashboardPage() {
           </div>
           <div>
             <p className="text-[#8b7355] text-sm mb-1 font-medium">الإيرادات</p>
-            <p className="text-4xl font-bold text-[#2c2c2c] mb-1">
-              {isLoading ? '...' : `${stats.totalRevenue.toFixed(2)} ₪`}
+            <p className="text-3xl font-bold text-[#2c2c2c] mb-1">
+              {isLoading ? '...' : `₪ ${stats.totalRevenue.toFixed(2)}`}
             </p>
-            <p className="text-xs text-[#8b7355]">إجمالي المبيعات المكتملة</p>
+            <p className="text-xs text-[#8b7355] mb-2">مع التوصيل</p>
+            <div className="pt-2 border-t border-[#8b7355]/20">
+              <p className="text-xs text-[#8b7355] mb-1">إجمالي المبيعات (بدون التوصيل)</p>
+              <p className="text-xl font-bold text-[#2c2c2c]">
+                {isLoading ? '...' : `₪ ${stats.totalSales.toFixed(2)}`}
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -1490,7 +1490,8 @@ export default function ProductsPage() {
                               <option value="__custom__">+ لون جديد (اكتب بنفسك)</option>
                             </select>
                           )}
-                          {((editingProduct && !('id' in color)) || (!editingProduct)) && color.color_name === '' && (
+                          {((editingProduct && !('id' in color)) || (!editingProduct)) && 
+                           (color.color_name === '' || !availableColors.includes(color.color_name)) && (
                             <input
                               type="text"
                               value={color.color_name}
@@ -1718,12 +1719,15 @@ export default function ProductsPage() {
                         <option value="__new__">+ إضافة لون جديد</option>
                       </select>
                       
-                      {colorFormData.color_name === '__new__' && (
+                      {(colorFormData.color_name === '__new__' || (colorFormData.color_name && !availableColors.includes(colorFormData.color_name))) && (
                         <input
                           type="text"
+                          value={colorFormData.color_name === '__new__' ? '' : colorFormData.color_name}
                           placeholder="اكتب اسم اللون الجديد"
                           className="w-full px-4 py-3 border-2 border-[#e8e8c8] rounded-xl focus:outline-none focus:border-[#5E4A45] transition-colors mt-3"
-                          onChange={(e) => setColorFormData({ ...colorFormData, color_name: e.target.value === '' ? '__new__' : e.target.value })}
+                          onChange={(e) => {
+                            setColorFormData({ ...colorFormData, color_name: e.target.value });
+                          }}
                           autoFocus
                         />
                       )}

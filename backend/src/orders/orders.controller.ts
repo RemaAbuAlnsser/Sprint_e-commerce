@@ -10,6 +10,11 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
+  @Get('stats/revenue')
+  async getRevenue() {
+    return this.ordersService.getRevenue();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.ordersService.findOne(+id);

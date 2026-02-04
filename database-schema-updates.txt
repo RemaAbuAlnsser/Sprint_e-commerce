@@ -1,0 +1,21 @@
+-- أوامر SQL المطلوبة لتحديث قاعدة البيانات
+-- نفذ هذه الأوامر في MySQL Workbench أو phpMyAdmin
+
+-- 1. إضافة حقل اللون في جدول order_items (إذا لم يكن موجوداً)
+ALTER TABLE order_items 
+ADD COLUMN IF NOT EXISTS color_name VARCHAR(100) DEFAULT NULL AFTER quantity;
+
+-- 2. إضافة حقل total_sales في جدول revenue (الجدول موجود بالفعل)
+ALTER TABLE revenue 
+ADD COLUMN total_sales DECIMAL(10,2) DEFAULT 0 COMMENT 'إجمالي المبيعات بدون التوصيل' 
+AFTER total_revenue;
+
+-- 3. (اختياري) إذا كان جدول revenue غير موجود، استخدم هذا الأمر بدلاً من الأمر رقم 2:
+-- CREATE TABLE IF NOT EXISTS revenue (
+--   id INT PRIMARY KEY AUTO_INCREMENT,
+--   total_revenue DECIMAL(10,2) DEFAULT 0 COMMENT 'الإيرادات الكاملة مع التوصيل',
+--   total_sales DECIMAL(10,2) DEFAULT 0 COMMENT 'إجمالي المبيعات بدون التوصيل',
+--   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+-- INSERT INTO revenue (total_revenue, total_sales) VALUES (0, 0);

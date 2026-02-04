@@ -89,7 +89,7 @@ export default function ReturnPolicyModal({ isOpen, onClose }: ReturnPolicyModal
             <div className="bg-white rounded-2xl p-6 border border-gray-300">
               <h3 className="text-xl font-bold text-black mb-4">1. الكفالة</h3>
               <p className="text-black leading-relaxed">
-                جميع المنتجات المباعة تشمل كفالة لمدة سنة كاملة ضد عيوب التصنيع.
+                فقط المنتجات الكهربائية تشمل كفالة لمدة سنة كاملة ضد عيوب التصنيع.
               </p>
             </div>
 

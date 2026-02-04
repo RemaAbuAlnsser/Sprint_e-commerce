@@ -450,16 +450,33 @@ export default function ProductPage() {
                 {product.name}
               </h1>
               
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-4xl font-bold text-[#d4af37]">
-                  ₪{Number(product.price).toFixed(2)}
-                </span>
+              <div className="mb-6">
+                {product.old_price && Number(product.old_price) > Number(product.price) ? (
+                  <div className="flex flex-col gap-2 mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl text-gray-400 line-through">
+                        ₪{Number(product.old_price).toFixed(2)}
+                      </span>
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-lg font-bold text-sm">
+                        -{Math.round(((Number(product.old_price) - Number(product.price)) / Number(product.old_price)) * 100)}%
+                      </span>
+                    </div>
+                    <span className="text-4xl font-bold text-[#d4af37]">
+                      ₪{Number(product.price).toFixed(2)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-4xl font-bold text-[#d4af37] block mb-4">
+                    ₪{Number(product.price).toFixed(2)}
+                  </span>
+                )}
+                
                 {product.stock > 0 ? (
-                  <span className="px-4 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                  <span className="inline-block px-4 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                     متوفر في المخزون
                   </span>
                 ) : (
-                  <span className="px-4 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                  <span className="inline-block px-4 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
                     غير متوفر
                   </span>
                 )}

@@ -37,14 +37,28 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [totalSales, setTotalSales] = useState(0);
 
   useEffect(() => {
     fetchOrders();
+    fetchRevenue();
   }, []);
 
   useEffect(() => {
     filterOrders();
   }, [orders, selectedStatus, searchQuery]);
+
+  const fetchRevenue = async () => {
+    try {
+      const response = await fetch(`${API_URL}/orders/stats/revenue`);
+      const data = await response.json();
+      if (data.success) {
+        setTotalSales(data.total_sales || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching revenue:', error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -150,9 +164,7 @@ export default function OrdersPage() {
     total: orders.length,
     pending: orders.filter(o => o.status === 'pending').length,
     completed: orders.filter(o => o.status === 'delivered').length,
-    totalRevenue: orders
-      .filter(o => o.status === 'completed')
-      .reduce((sum, o) => sum + Number(o.total), 0),
+    totalRevenue: totalSales,
   };
 
   return (

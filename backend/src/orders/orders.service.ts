@@ -136,10 +136,11 @@ export class OrdersService {
             product_id, 
             product_name,
             product_price,
-            quantity, 
+            quantity,
+            color_name,
             subtotal
           ) 
-          VALUES (?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
         
         await this.databaseService.query(itemQuery, [
@@ -148,6 +149,7 @@ export class OrdersService {
           item.product_name,
           item.product_price,
           item.quantity,
+          item.color_name || null,
           item.subtotal,
         ]);
 
@@ -167,9 +169,51 @@ export class OrdersService {
   }
 
   async updateStatus(id: number, status: string) {
-    const query = 'UPDATE orders SET status = ? WHERE id = ?';
-    await this.databaseService.query(query, [status, id]);
-    return { success: true, message: 'تم تحديث حالة الطلب بنجاح' };
+    try {
+      // الحصول على معلومات الطلب قبل التحديث
+      const orderQuery = 'SELECT total, subtotal, status FROM orders WHERE id = ?';
+      const orders: any = await this.databaseService.query(orderQuery, [id]);
+      
+      if (orders.length === 0) {
+        return { success: false, message: 'الطلب غير موجود' };
+      }
+      
+      const oldStatus = orders[0].status;
+      const orderTotal = orders[0].total; // السعر الكامل مع التوصيل
+      const orderSubtotal = orders[0].subtotal; // سعر المنتجات فقط بدون التوصيل
+      
+      // تحديث حالة الطلب
+      const updateQuery = 'UPDATE orders SET status = ? WHERE id = ?';
+      await this.databaseService.query(updateQuery, [status, id]);
+      
+      // إذا تم تغيير الحالة إلى "delivered"، تحديث الإيرادات وإجمالي المبيعات
+      if (status === 'delivered' && oldStatus !== 'delivered') {
+        // التحقق من وجود سجل في جدول revenue
+        const checkRevenueQuery = 'SELECT id, total_revenue, total_sales FROM revenue LIMIT 1';
+        const revenueRecords: any = await this.databaseService.query(checkRevenueQuery);
+        
+        if (revenueRecords.length > 0) {
+          // تحديث الإيرادات (السعر الكامل مع التوصيل) وإجمالي المبيعات (بدون التوصيل)
+          const updateRevenueQuery = 'UPDATE revenue SET total_revenue = total_revenue + ?, total_sales = total_sales + ? WHERE id = ?';
+          await this.databaseService.query(updateRevenueQuery, [orderTotal, orderSubtotal, revenueRecords[0].id]);
+        } else {
+          // إنشاء سجل جديد للإيرادات
+          const insertRevenueQuery = 'INSERT INTO revenue (total_revenue, total_sales) VALUES (?, ?)';
+          await this.databaseService.query(insertRevenueQuery, [orderTotal, orderSubtotal]);
+        }
+      }
+      
+      // إذا تم إلغاء طلب كان موصلاً، طرح قيمته من الإيرادات وإجمالي المبيعات
+      if (oldStatus === 'delivered' && status !== 'delivered') {
+        const updateRevenueQuery = 'UPDATE revenue SET total_revenue = total_revenue - ?, total_sales = total_sales - ? WHERE id = (SELECT id FROM revenue LIMIT 1)';
+        await this.databaseService.query(updateRevenueQuery, [orderTotal, orderSubtotal]);
+      }
+      
+      return { success: true, message: 'تم تحديث حالة الطلب بنجاح' };
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      return { success: false, message: 'فشل تحديث حالة الطلب', error: error.message };
+    }
   }
 
   async delete(id: number) {
@@ -180,6 +224,35 @@ export class OrdersService {
     } catch (error) {
       console.error('Error deleting order:', error);
       return { success: false, message: 'فشل حذف الطلب' };
+    }
+  }
+
+  async getRevenue() {
+    try {
+      const query = 'SELECT total_revenue, total_sales FROM revenue LIMIT 1';
+      const result: any = await this.databaseService.query(query);
+      
+      if (result.length > 0) {
+        return {
+          success: true,
+          total_revenue: Number(result[0].total_revenue) || 0,
+          total_sales: Number(result[0].total_sales) || 0,
+        };
+      }
+      
+      return {
+        success: true,
+        total_revenue: 0,
+        total_sales: 0,
+      };
+    } catch (error) {
+      console.error('Error fetching revenue:', error);
+      return {
+        success: false,
+        total_revenue: 0,
+        total_sales: 0,
+        error: error.message,
+      };
     }
   }
 }

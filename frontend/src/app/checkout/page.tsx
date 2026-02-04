@@ -61,6 +61,7 @@ export default function CheckoutPage() {
           product_name: item.name,
           product_price: item.price,
           quantity: item.quantity,
+          color_name: item.color_name || null,
           subtotal: item.price * item.quantity,
         })),
       };
@@ -127,7 +128,7 @@ export default function CheckoutPage() {
       ) : null}
       <div className="min-h-screen bg-gray-50">
         <Header />
-      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12 pt-24 md:pt-28">
         <h1 className="text-2xl md:text-3xl font-bold text-[#2c2c2c] mb-8 text-center">
           إتمام الطلب
         </h1>
@@ -267,7 +268,11 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold text-[#2c2c2c] mb-6">مناطق التوصيل</h2>
                 
                 <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-4 border-2 border-[#d4af37] bg-purple-50 rounded-lg cursor-pointer transition-all hover:bg-purple-100">
+                  <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    formData.shippingMethod === 'express'
+                      ? 'border-[#d4af37] bg-purple-50'
+                      : 'border-gray-200 hover:border-[#2c2c2c] hover:bg-gray-50'
+                  }`}>
                     <input
                       type="radio"
                       name="shippingMethod"
@@ -283,7 +288,11 @@ export default function CheckoutPage() {
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition-all hover:border-[#2c2c2c] hover:bg-gray-50">
+                  <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    formData.shippingMethod === 'standard'
+                      ? 'border-[#d4af37] bg-purple-50'
+                      : 'border-gray-200 hover:border-[#2c2c2c] hover:bg-gray-50'
+                  }`}>
                     <input
                       type="radio"
                       name="shippingMethod"
@@ -299,7 +308,11 @@ export default function CheckoutPage() {
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition-all hover:border-[#2c2c2c] hover:bg-gray-50">
+                  <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    formData.shippingMethod === 'internal'
+                      ? 'border-[#d4af37] bg-purple-50'
+                      : 'border-gray-200 hover:border-[#2c2c2c] hover:bg-gray-50'
+                  }`}>
                     <input
                       type="radio"
                       name="shippingMethod"
