@@ -1,5 +1,5 @@
 'use client';
-import { API_URL } from '@/lib/api';
+import { API_URL, getImageUrl } from '@/lib/api';
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -67,6 +67,7 @@ export default function ProductPage() {
   const [loadingRelated, setLoadingRelated] = useState(false);
   const addToCartButtonRef = useRef<HTMLButtonElement>(null);
   const { addToCart } = useCart();
+
 
   useEffect(() => {
     fetchProduct();
@@ -163,7 +164,7 @@ export default function ProductPage() {
     flyingProduct.style.height = '60px';
     
     const flyingImage = document.createElement('img');
-    flyingImage.src = `${API_URL}${currentImageUrl}`;
+flyingImage.src = getImageUrl(currentImageUrl);
     flyingImage.className = 'w-full h-full object-cover rounded-lg shadow-lg';
     flyingProduct.appendChild(flyingImage);
     
@@ -339,7 +340,7 @@ export default function ProductPage() {
                       }`}
                     >
                       <Image
-                        src={`${API_URL}${img}`}
+                        src={getImageUrl(img)}
                         alt={`${product.name} - ${index + 1}`}
                         fill
                         className="object-cover"
@@ -384,7 +385,7 @@ export default function ProductPage() {
                     return currentImage ? (
                       <>
                         <Image
-                          src={`${API_URL}${currentImage}`}
+                          src={getImageUrl(currentImage)}
                           alt={product.name}
                           fill
                           className="object-cover transition-all duration-500 group-hover:scale-105"
@@ -515,7 +516,7 @@ export default function ProductPage() {
                       {color.image_url ? (
                         <div className="relative w-16 h-16 rounded-lg overflow-hidden">
                           <Image
-                            src={`${API_URL}${color.image_url}`}
+                            src={getImageUrl(color.image_url)}
                             alt={color.color_name}
                             fill
                             className="object-cover"
@@ -634,7 +635,7 @@ export default function ProductPage() {
                   >
                     {relatedProduct.image_url ? (
                       <Image
-                        src={`${API_URL}${relatedProduct.image_url}`}
+                        src={getImageUrl(relatedProduct.image_url)}
                         alt={relatedProduct.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"

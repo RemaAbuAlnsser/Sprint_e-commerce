@@ -1,5 +1,5 @@
 'use client';
-import { API_URL } from '@/lib/api';
+import { API_URL, getImageUrl } from '@/lib/api';
 
 import { useCart } from '@/contexts/CartContext';
 import Header from '@/components/Header';
@@ -145,7 +145,7 @@ export default function CheckoutPage() {
                     <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                       {(item.color_image_url || item.image_url) ? (
                         <Image
-                          src={`${API_URL}${item.color_image_url || item.image_url}`}
+                          src={getImageUrl(item.color_image_url || item.image_url)}
                           alt={item.name}
                           width={64}
                           height={64}
