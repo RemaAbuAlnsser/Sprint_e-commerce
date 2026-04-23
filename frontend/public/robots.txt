@@ -1,0 +1,13 @@
+# Robots.txt for Magnetix Store
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-success
+
+# Sitemaps
+Sitemap: https://magnetix.ps/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
